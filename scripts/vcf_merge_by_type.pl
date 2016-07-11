@@ -59,7 +59,7 @@ process($out_dir."/sv.clean", @sv);
 
 sub process {
 
-  my $workflow = shift;
+  my $out_file = shift;
   my @files = @_;
 
   $d = {};
@@ -67,11 +67,11 @@ sub process {
   $info = {};
   my $header = <<"EOS";
 ##fileformat=VCFv4.1
-##variant_merge=$workflow
+##variant_merge=$out_file
 #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
 EOS
 
-  open my $OUT, ">$workflow.vcf" or die;
+  open my $OUT, ">$out_file.vcf" or die;
 
   print $OUT $header;
 
@@ -92,7 +92,7 @@ EOS
   }
   close $OUT;
 
-  sort_and_index($workflow);
+  sort_and_index($out_file);
 
 }
 
