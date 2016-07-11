@@ -98,3 +98,5 @@ outputs:
       type: Directory
       outputBinding:
           glob: *.clean.sorted.vcf.gz
+
+baseCommand: /opt/oxog_scripts/vcf_merge_by_type.pl
