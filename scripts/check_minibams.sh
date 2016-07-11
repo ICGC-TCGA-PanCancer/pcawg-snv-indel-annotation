@@ -8,8 +8,37 @@ for pipeline in sanger broad dkfz_embl muse smufin; do
 	SNV_PATTERN=""
 	if [ "$pipeline" == "muse" ] ; then
 		SNV_PATTERN="/datastore/vcf/$pipeline/*/*somatic.snv*vcf.gz"
+		stat $SNV_PATTERN
+		if [ $? == "1" ] ; then
+			SNV_PATTERN="/datastore/vcf/$pipeline/*somatic.snv*vcf.gz"
+			stat $SNV_PATTERN
+			if [ $? == "1" ] ; then
+				echo "Could not find file /datastore/vcf/$pipeline/*/*somatic.snv*vcf.gz or /datastore/vcf/$pipeline/*somatic.snv*vcf.gz - cannot proceed!"
+				exit 1
+			fi
+		fi
+	elif [ "$pipeline" == "smufin" ] ; then
+		SNV_PATTERN="/datastore/vcf/$pipeline/*/*somatic.indel*bcftools-norm*vcf.gz"
+		stat $SNV_PATTERN
+		if [ $? == "1" ] ; then
+			SNV_PATTERN="/datastore/vcf/$pipeline/*somatic.indel*bcftools-norm*vcf.gz"
+			stat $SNV_PATTERN
+			if [ $? == "1" ] ; then
+				echo "Could not find file /datastore/vcf/$pipeline/*/*somatic.indel*bcftools-norm*vcf.gz or /datastore/vcf/$pipeline/*somatic.indel*bcftools-norm*vcf.gz - cannot proceed!"
+				exit 1
+			fi
+		fi
 	else
 		SNV_PATTERN="/datastore/vcf/$pipeline/*/*somatic.snv*pass-filtered*vcf.gz"
+		stat $SNV_PATTERN
+		if [ $? == "1" ] ; then
+			SNV_PATTERN="/datastore/vcf/$pipeline/*somatic.snv*pass-filtered*vcf.gz"
+			stat $SNV_PATTERN
+			if [ $? == "1" ] ; then
+				echo "Could not find file /datastore/vcf/$pipeline/*/*somatic.snv*pass-filtered*vcf.gz or /datastore/vcf/$pipeline/*somatic.snv*pass-filtered*vcf.gz - cannot proceed!"
+				exit 1
+			fi
+		fi
 	fi
 
 	for snv_vcf in $(ls $SNV_PATTERN); do
@@ -21,7 +50,7 @@ for pipeline in sanger broad dkfz_embl muse smufin; do
 
 		while read location; do
 			echo "for location $location:"
-			PATH_TO_NORMAL=$(([ -f /datastore/bam/normal/*/*.bam ] && echo /datastore/bam/normal/*/*.bam) || ([ -f /datastore/bam/normal/*.bam ] && echo /datastore/bam/normal/*.bam))
+			PATH_TO_NORMAL=$( ( [ -f /datastore/bam/normal/*/*.bam ] && echo /datastore/bam/normal/*/*.bam) || ([ -f /datastore/bam/normal/*.bam ] && echo /datastore/bam/normal/*.bam))
 			COUNT_IN_NORMAL=$(samtools view $PATH_TO_NORMAL 22:$location-$location -c)
 			echo "count in normal - original bam: $COUNT_IN_NORMAL"
 
