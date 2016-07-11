@@ -1,3 +1,5 @@
+#! /usr/bin/perl
+
 use strict;
 use String::Random;
 use Getopt::Long;
@@ -59,7 +61,7 @@ process($out_dir."/sv.clean", @sv);
 
 sub process {
 
-  my $workflow = shift;
+  my $out_file = shift;
   my @files = @_;
 
   $d = {};
@@ -67,11 +69,11 @@ sub process {
   $info = {};
   my $header = <<"EOS";
 ##fileformat=VCFv4.1
-##variant_merge=$workflow
+##variant_merge=$out_file
 #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
 EOS
 
-  open my $OUT, ">$workflow.vcf" or die;
+  open my $OUT, ">$out_file.vcf" or die;
 
   print $OUT $header;
 
@@ -92,7 +94,7 @@ EOS
   }
   close $OUT;
 
-  sort_and_index($workflow);
+  sort_and_index($out_file);
 
 }
 
@@ -103,16 +105,10 @@ sub sort_and_index {
   my $filename = $parts[-1];
   my $rnd = new String::Random;
   my $randomString = $rnd->randregex('\w{16}');
-  my $cmd = "sudo docker run --rm --name=sort_merged_vcf_$randomString \\
-        -v $file.vcf:/input.vcf:rw \\
-        -v /datastore/refdata/public:/ref \\
-        -v $out_dir:/outdir/:rw \\
-        compbio/ngseasy-base:a1.0-002 /bin/bash -c \\
-        \" vcf-sort /input.vcf > /outdir/$filename.sorted.vcf; \\
+  my $cmd = " vcf-sort $file.vcf > /outdir/$filename.sorted.vcf; \\
         echo zipping_and_indexing ; \\
-        bgzip -f -c /outdir/$filename.sorted.vcf > /outdir/$filename.sorted.vcf.gz ; \\
-        tabix -p vcf /outdir/$filename.sorted.vcf.gz\"
-   ";
+        bgzip -f -c $out_dir/$filename.sorted.vcf > $out_dir/$filename.sorted.vcf.gz ; \\
+        tabix -p vcf $out_dir/$filename.sorted.vcf.gz ";
 
   print "$cmd\n";
 
