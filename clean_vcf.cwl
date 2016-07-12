@@ -12,7 +12,6 @@ dct:creator:
     foaf:mbox: "solomon.shorser@oicr.on.ca"
 
 requirements:
-  - class: InlineJavascriptRequirement
   - class: DockerRequirement
     dockerPull: pancancer/pcawg-oxog-tools:1.0.0
 
@@ -26,7 +25,6 @@ outputs:
     clean-vcf:
       type: File
       outputBinding:
-        #glob: ${ return "*"+inputs['vcf'].path.replace("\.vcf\.gz",".cleaned.vcf"); }
         glob: "*.cleaned.vcf"
 
 baseCommand: /opt/oxog_scripts/clean_vcf.sh
