@@ -35,7 +35,7 @@ my $d = {};
 my ($broad_snv, $sanger_snv, $de_snv, $muse_snv,
         $broad_indel, $sanger_indel, $de_indel,
         $broad_sv, $sanger_sv, $de_sv, $smufin_indel,
-        $in_dir, $out_dir); # = @ARGV;
+        $in_dir, $out_dir);
 
 GetOptions ("broad_snv=s" => \$broad_snv,
 			"sanger_snv=s" => \$sanger_snv,
@@ -115,20 +115,6 @@ sub sort_and_index {
   my $result = system($cmd);
 
   print "Status of sort: $result\n";
-}
-
-
-#Is this sub even used anymore? If not, it should be removed.
-sub parse_info {
-  my ($file, $info_hash) = @_;
-  open(IN, "zcat $file |") or die;
-  while(<IN>) {
-    chomp;
-    if (/^##INFO=(.+)$/) {
-      $info_hash->{$1} = 1;
-    }
-  }
-  close IN;
 }
 
 sub process_file {

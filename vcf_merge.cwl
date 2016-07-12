@@ -1,5 +1,5 @@
 #!/usr/bin/env cwl-runner
-cwlVersion: cwl:draft-3
+cwlVersion: v1.0
 class: CommandLineTool
 id: "merge_vcfs"
 label: "merge_vcfs"
@@ -94,9 +94,11 @@ inputs:
         prefix: --outdir
 
 outputs:
-    outdir:
-      type: Directory
+    output:
+      type:
+        type: array
+        items: File
       outputBinding:
-          glob: *.clean.sorted.vcf.gz
+          glob: "*.clean.sorted.vcf.gz"
 
 baseCommand: /opt/oxog_scripts/vcf_merge_by_type.pl
