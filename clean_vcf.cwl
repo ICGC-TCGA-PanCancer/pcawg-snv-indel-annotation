@@ -1,5 +1,5 @@
 #!/usr/bin/env cwl-runner
-cwlVersion: cwl:draft-3
+cwlVersion: v1.0
 class: CommandLineTool
 id: "clean-vcf"
 label: "clean-vcf"
@@ -12,8 +12,9 @@ dct:creator:
     foaf:mbox: "solomon.shorser@oicr.on.ca"
 
 requirements:
+  - class: InlineJavascriptRequirement
   - class: DockerRequirement
-    dockerPull: pancancer/oxog-tools:1.0.0
+    dockerPull: pancancer/pcawg-oxog-tools:1.0.0
 
 inputs:
     - id: "#vcf"
@@ -22,9 +23,10 @@ inputs:
         position: 1
 
 outputs:
-    - id: "#clean-vcf"
+    clean-vcf:
       type: File
       outputBinding:
-        glob: *.cleaned.vcf
+        #glob: ${ return "*"+inputs['vcf'].path.replace("\.vcf\.gz",".cleaned.vcf"); }
+        glob: "*.cleaned.vcf"
 
 baseCommand: /opt/oxog_scripts/clean_vcf.sh
