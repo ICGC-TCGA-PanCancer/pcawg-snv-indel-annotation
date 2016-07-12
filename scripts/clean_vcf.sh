@@ -14,12 +14,13 @@ echo "OUTPUT_FILE is $OUTPUT_FILE"
 #Fourth, replace any remaining sequential tabs with tab-dot-tab.
 #Fifth, replace any leading M with MT
 #Sixth, get rid of trailing semi-colons in header lines.
-
+set -x
 bgzip -d -c $INPUT_FILE \
-	| sed -e 's/$TAB_CHAR$/$TAB_CHAR./g' \
-		-e 's/$TAB_CHAR$TAB_CHAR/$TAB_CHAR.$TAB_CHAR/g' \
-		-e 's/\([^$TAB_CHAR]\)$TAB_CHAR$TAB_CHAR\([^$TAB_CHAR]\)/\1$TAB_CHAR.$TAB_CHAR\2/g' \
-		-e 's/$TAB_CHAR$TAB_CHAR/$TAB_CHAR.$TAB_CHAR/g' \
-		-e 's/^M\([[:blank:]]\)/MT\1/g' \
-		-e 's/\(##.*\);$/\1/g' \
+	| sed -e s/"${TAB_CHAR}"$/"${TAB_CHAR}"./g \
+		-e s/"${TAB_CHAR}""${TAB_CHAR}"/"${TAB_CHAR}"."${TAB_CHAR}"/g \
+		-e s/\([^"${TAB_CHAR}"]\)"${TAB_CHAR}""${TAB_CHAR}"\([^"${TAB_CHAR}"]\)/\1"${TAB_CHAR}"."${TAB_CHAR}"\2/g \
+		-e s/"$TAB_CHAR""$TAB_CHAR"/"$TAB_CHAR"."$TAB_CHAR"/g \
+		-e s/^M\([[:blank:]]\)/MT\1/g \
+		-e s/\(##.*\)\;$/\1/g \
 	> $OUTPUT_FILE
+set +x
