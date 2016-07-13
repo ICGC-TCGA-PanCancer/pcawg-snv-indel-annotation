@@ -1,5 +1,5 @@
 #!/usr/bin/env cwl-runner
-cwlVersion: cwl:draft-3
+cwlVersion: v1.0
 class: CommandLineTool
 id: "extract_snvs"
 label: "extract_snvs"
@@ -13,7 +13,7 @@ dct:creator:
 
 requirements:
   - class: DockerRequirement
-    dockerPull: pancancer/oxog-tools:1.0.0
+    dockerPull: pancancer/pcawg-oxog-tools:1.0.0
 
 inputs:
     - id: "#vcf"
@@ -22,9 +22,9 @@ inputs:
         position: 1
 
 outputs:
-    - id: "#extracted-snvs"
+    extracted-snvs:
       type: File
       outputBinding:
-        glob: extracted_snvs.vcf.gz
+        glob: "*.extracted-SNVs.vcf.gz"
 
 baseCommand: /opt/oxog_scripts/extract_snvs_from_indels.sh
