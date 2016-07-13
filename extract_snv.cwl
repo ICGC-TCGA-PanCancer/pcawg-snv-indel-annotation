@@ -25,6 +25,6 @@ outputs:
     extracted-snvs:
       type: File
       outputBinding:
-        glob: "*.extracted-SNVs.vcf"
+        glob: "*.extracted-SNVs.vcf.gz"
 
 baseCommand: /opt/oxog_scripts/extract_snvs_from_indels.sh
