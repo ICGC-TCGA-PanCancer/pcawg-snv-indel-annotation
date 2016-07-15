@@ -1,2 +1,5 @@
 *.vcf
 *.vcf.gz
+*.input.json
+*.fasta
+*.fai
