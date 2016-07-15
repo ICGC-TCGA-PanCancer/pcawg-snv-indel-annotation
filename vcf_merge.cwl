@@ -6,7 +6,7 @@ label: "merge_vcfs"
 
 description: |
     This tool will merge VCFs by type (SV, SNV, INDEL). This CWL wrapper was written by Solomon Shorser.
-    The Perl script was originall written by Brian O'Connor and maintained by Solomon Shorser.
+    The Perl script was originaly written by Brian O'Connor and maintained by Solomon Shorser.
 
 dct:creator:
     foaf:name: "Solomon Shorser"
@@ -14,7 +14,7 @@ dct:creator:
 
 requirements:
   - class: DockerRequirement
-    dockerPull: quay.io/pancancer/pcawg-oxog-tools:1.0.0
+    dockerPull: pancancer/pcawg-oxog-tools
 
 inputs:
     - id: "#broad_snv"
@@ -33,7 +33,7 @@ inputs:
       type: File
       inputBinding:
         position: 3
-        prefix: --de_snv
+        prefix: --dkfz_embl_snv
 
     - id: "#muse_snv"
       type: File
@@ -57,7 +57,7 @@ inputs:
       type: File
       inputBinding:
         position: 7
-        prefix: --de_sv
+        prefix: --dkfz_embl_sv
 
     - id: "#broad_indel"
       type: File
@@ -75,7 +75,7 @@ inputs:
       type: File
       inputBinding:
         position: 10
-        prefix: --de_indel
+        prefix: --dkfz_embl_indel
 
     - id: "#smufin_indel"
       type: File
@@ -84,15 +84,16 @@ inputs:
         prefix: --smufin_indel
 
     - id: "#in_dir"
-      type: Directory
+      type: string
+      inputBinding:
         position: 12
         prefix: --indir
 
     - id: "#out_dir"
-      type: Directory
+      type: string
+      inputBinding:
         position: 13
         prefix: --outdir
-
 outputs:
     output:
       type:
