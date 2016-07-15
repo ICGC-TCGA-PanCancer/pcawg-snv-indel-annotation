@@ -12,12 +12,12 @@ RUN mkdir -p /opt/gitroot
 RUN cd /opt/gitroot && git clone https://github.com/samtools/htslib.git \
 	&& cd htslib \
 	&& git checkout 1.3.1 \
-	&& make
+	&& make && make install
 
 RUN cd /opt/gitroot && git clone https://github.com/samtools/bcftools.git \
 	&& cd bcftools \
 	&& git checkout 1.3.1 \
-	&& make
+	&& make && make install
 
 # Instal VCFTools - this is used for vcf-sort in the vcf_merge_by_type.pl script
 RUN apt-get install pkg-config dh-autoreconf -y

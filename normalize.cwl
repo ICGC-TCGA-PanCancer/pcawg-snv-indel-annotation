@@ -1,5 +1,5 @@
 #!/usr/bin/env cwl-runner
-cwlVersion: cwl:draft-3
+cwlVersion: v1.0
 class: CommandLineTool
 id: "normalize"
 label: "normalize"
@@ -13,7 +13,8 @@ dct:creator:
 
 requirements:
   - class: DockerRequirement
-    dockerPull: pancancer/oxog-tools:1.0.0
+    dockerPull: pancancer/pcawg-oxog-tools
+
 
 inputs:
     - id: "#vcf"
@@ -24,11 +25,14 @@ inputs:
       type: File
       inputBinding:
         position: 2
+      secondaryFiles:
+        - .fai
+
 
 outputs:
-    - id: "#pass-filtered-filnames"
+    - id: "#normalized-vcf"
       type: File
       outputBinding:
-        glob: *.normalized.vcf.gz
+        glob: "*.normalized.vcf.gz"
 
 baseCommand: /opt/oxog_scripts/normalize.sh
