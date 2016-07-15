@@ -14,10 +14,6 @@ dct:creator:
 requirements:
   - class: DockerRequirement
     dockerPull: pancancer/pcawg-oxog-tools
-  - class: InlineJavascriptRequirement
-  - class: InitialWorkDirRequirement
-    listing:
-       - $(inputs.vcf)
 
 
 inputs:
@@ -25,7 +21,6 @@ inputs:
       type: File
       inputBinding:
         position: 1
-        valueFrom: $(self.basename)
     - id: "#ref"
       type: File
       inputBinding:
