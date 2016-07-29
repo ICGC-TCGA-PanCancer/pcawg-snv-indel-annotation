@@ -15,7 +15,7 @@ dct:creator:
 requirements:
   - class: DockerRequirement
     dockerPull: pancancer/pcawg-oxog-tools
-
+# TODO: the perl script can actually take multiple VCFs for each arg if they are in a single comma-separated string. Add this functionality for multitumour.
 inputs:
     - id: "#broad_snv"
       type: File
