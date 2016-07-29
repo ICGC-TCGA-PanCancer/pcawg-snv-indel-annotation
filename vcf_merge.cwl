@@ -15,73 +15,43 @@ dct:creator:
 requirements:
   - class: DockerRequirement
     dockerPull: pancancer/pcawg-oxog-tools
-# TODO: the perl script can actually take multiple VCFs for each arg if they are in a single comma-separated string. Add this functionality for multitumour.
+  - class: InlineJavascriptRequirement
+    expressionLib:
+      - { $include: util.js }
+
 inputs:
     - id: "#broad_snv"
-      type: File
-      inputBinding:
-        position: 1
-        prefix: --broad_snv
+      type: File[]
 
     - id: "#sanger_snv"
-      type: File
-      inputBinding:
-        position: 2
-        prefix: --sanger_snv
+      type: File[]
 
     - id: "#de_snv"
-      type: File
-      inputBinding:
-        position: 3
-        prefix: --dkfz_embl_snv
+      type: File[]
 
     - id: "#muse_snv"
-      type: File
-      inputBinding:
-        position: 4
-        prefix: --muse_snv
+      type: File[]
 
     - id: "#broad_sv"
-      type: File
-      inputBinding:
-        position: 5
-        prefix: --broad_sv
+      type: File[]
 
     - id: "#sanger_sv"
-      type: File
-      inputBinding:
-        position: 6
-        prefix: --sanger_sv
+      type: File[]
 
     - id: "#de_sv"
-      type: File
-      inputBinding:
-        position: 7
-        prefix: --dkfz_embl_sv
+      type: File[]
 
     - id: "#broad_indel"
-      type: File
-      inputBinding:
-        position: 8
-        prefix: --broad_indel
+      type: File[]
 
     - id: "#sanger_indel"
-      type: File
-      inputBinding:
-        position: 9
-        prefix: --sanger_indel
+      type: File[]
 
     - id: "#de_indel"
-      type: File
-      inputBinding:
-        position: 10
-        prefix: --dkfz_embl_indel
+      type: File[]
 
     - id: "#smufin_indel"
-      type: File
-      inputBinding:
-        position: 11
-        prefix: --smufin_indel
+      type: File[]
 
     - id: "#in_dir"
       type: string
@@ -101,5 +71,39 @@ outputs:
         items: File
       outputBinding:
           glob: "*.clean.sorted.vcf.gz"
+
+arguments:
+    - prefix: --broad_snv
+      valueFrom: $(formatArray(inputs.broad_snv))
+
+    - prefix: --sanger_snv
+      valueFrom: $(formatArray(inputs.sanger_snv))
+
+    - prefix: --dkfz_embl_snv
+      valueFrom: $(formatArray(inputs.de_snv))
+
+    - prefix: --muse_snv
+      valueFrom: $(formatArray(inputs.muse_snv))
+
+    - prefix: --broad_sv
+      valueFrom: $(formatArray(inputs.broad_sv))
+
+    - prefix: --sanger_sv
+      valueFrom: $(formatArray(inputs.sanger_sv))
+
+    - prefix: --dkfz_embl_sv
+      valueFrom: $(formatArray(inputs.de_sv))
+
+    - prefix: --broad_indel
+      valueFrom: $(formatArray(inputs.broad_indel))
+
+    - prefix: --sanger_indel
+      valueFrom: $(formatArray(inputs.sanger_indel))
+
+    - prefix: --dkfz_embl_indel
+      valueFrom: $(formatArray(inputs.de_indel))
+
+    - prefix: --smufin_indel
+      valueFrom: $(formatArray(inputs.smufin_indel))
 
 baseCommand: /opt/oxog_scripts/vcf_merge_by_type.pl
