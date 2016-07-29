@@ -6,7 +6,7 @@ label: "merge_vcfs"
 
 description: |
     This tool will merge VCFs by type (SV, SNV, INDEL). This CWL wrapper was written by Solomon Shorser.
-    The Perl script was originall written by Brian O'Connor and maintained by Solomon Shorser.
+    The Perl script was originaly written by Brian O'Connor and maintained by Solomon Shorser.
 
 dct:creator:
     foaf:name: "Solomon Shorser"
@@ -14,85 +14,56 @@ dct:creator:
 
 requirements:
   - class: DockerRequirement
-    dockerPull: quay.io/pancancer/pcawg-oxog-tools:1.0.0
+    dockerPull: pancancer/pcawg-oxog-tools
+  - class: InlineJavascriptRequirement
+    expressionLib:
+      - { $include: util.js }
 
 inputs:
     - id: "#broad_snv"
-      type: File
-      inputBinding:
-        position: 1
-        prefix: --broad_snv
+      type: File[]
 
     - id: "#sanger_snv"
-      type: File
-      inputBinding:
-        position: 2
-        prefix: --sanger_snv
+      type: File[]
 
     - id: "#de_snv"
-      type: File
-      inputBinding:
-        position: 3
-        prefix: --de_snv
+      type: File[]
 
     - id: "#muse_snv"
-      type: File
-      inputBinding:
-        position: 4
-        prefix: --muse_snv
+      type: File[]
 
     - id: "#broad_sv"
-      type: File
-      inputBinding:
-        position: 5
-        prefix: --broad_sv
+      type: File[]
 
     - id: "#sanger_sv"
-      type: File
-      inputBinding:
-        position: 6
-        prefix: --sanger_sv
+      type: File[]
 
     - id: "#de_sv"
-      type: File
-      inputBinding:
-        position: 7
-        prefix: --de_sv
+      type: File[]
 
     - id: "#broad_indel"
-      type: File
-      inputBinding:
-        position: 8
-        prefix: --broad_indel
+      type: File[]
 
     - id: "#sanger_indel"
-      type: File
-      inputBinding:
-        position: 9
-        prefix: --sanger_indel
+      type: File[]
 
     - id: "#de_indel"
-      type: File
-      inputBinding:
-        position: 10
-        prefix: --de_indel
+      type: File[]
 
     - id: "#smufin_indel"
-      type: File
-      inputBinding:
-        position: 11
-        prefix: --smufin_indel
+      type: File[]
 
     - id: "#in_dir"
-      type: Directory
+      type: string
+      inputBinding:
         position: 12
         prefix: --indir
 
     - id: "#out_dir"
-      type: Directory
+      type: string
+      inputBinding:
         position: 13
         prefix: --outdir
-
 outputs:
     output:
       type:
@@ -100,5 +71,39 @@ outputs:
         items: File
       outputBinding:
           glob: "*.clean.sorted.vcf.gz"
+
+arguments:
+    - prefix: --broad_snv
+      valueFrom: $(formatArray(inputs.broad_snv))
+
+    - prefix: --sanger_snv
+      valueFrom: $(formatArray(inputs.sanger_snv))
+
+    - prefix: --dkfz_embl_snv
+      valueFrom: $(formatArray(inputs.de_snv))
+
+    - prefix: --muse_snv
+      valueFrom: $(formatArray(inputs.muse_snv))
+
+    - prefix: --broad_sv
+      valueFrom: $(formatArray(inputs.broad_sv))
+
+    - prefix: --sanger_sv
+      valueFrom: $(formatArray(inputs.sanger_sv))
+
+    - prefix: --dkfz_embl_sv
+      valueFrom: $(formatArray(inputs.de_sv))
+
+    - prefix: --broad_indel
+      valueFrom: $(formatArray(inputs.broad_indel))
+
+    - prefix: --sanger_indel
+      valueFrom: $(formatArray(inputs.sanger_indel))
+
+    - prefix: --dkfz_embl_indel
+      valueFrom: $(formatArray(inputs.de_indel))
+
+    - prefix: --smufin_indel
+      valueFrom: $(formatArray(inputs.smufin_indel))
 
 baseCommand: /opt/oxog_scripts/vcf_merge_by_type.pl

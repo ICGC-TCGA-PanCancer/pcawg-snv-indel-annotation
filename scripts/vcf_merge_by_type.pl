@@ -105,7 +105,7 @@ sub sort_and_index {
   my $filename = $parts[-1];
   my $rnd = new String::Random;
   my $randomString = $rnd->randregex('\w{16}');
-  my $cmd = " vcf-sort $file.vcf > /outdir/$filename.sorted.vcf; \\
+  my $cmd = " vcf-sort $file.vcf > $out_dir/$filename.sorted.vcf; \\
         echo zipping_and_indexing ; \\
         bgzip -f -c $out_dir/$filename.sorted.vcf > $out_dir/$filename.sorted.vcf.gz ; \\
         tabix -p vcf $out_dir/$filename.sorted.vcf.gz ";

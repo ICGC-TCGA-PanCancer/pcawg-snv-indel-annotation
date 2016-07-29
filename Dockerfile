@@ -3,7 +3,7 @@ MAINTAINER solomon.shorser@oicr.on.ca
 RUN apt-get update
 RUN apt list upgradable
 RUN apt-get upgrade -y
-RUN apt-get install -y git tabix gcc make zlib1g-dev
+RUN apt-get install -y git tabix gcc make zlib1g-dev libstring-random-perl
 
 RUN mkdir -p /opt/gitroot
 
