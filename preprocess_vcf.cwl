@@ -13,7 +13,7 @@ outputs:
     outFiles:
       type: File[]
 #      outputSource: normalize/normalized-vcf
-      outputSource: clean/clean_vcf
+      outputSource: extract_snv/extracted_snvs
 
 requirements:
     - class: ScatterFeatureRequirement
@@ -36,21 +36,31 @@ steps:
         vcf: pass_filter/output
       out: [clean_vcf]
 
+    filter:
+      in:
+        in_vcf: clean/clean_vcf
+      out: [out_vcf]
+      run:
+        class: ExpressionTool
+        inputs:
+          in_vcf: File[]
+        outputs:
+          out_vcf: File[]
+        expression: |
+            $({ out_vcf: filterForIndels(inputs.in_vcf) })
+
     normalize:
       run: normalize.cwl
       scatter: normalize/vcf
       in:
         vcf:
-          source: clean/clean_vcf
-          valueFrom: $( filterForIndels(steps.clean.out) )
-        # vcf:
-        #     valueFrom: $( filterForIndels(clean-vcf) )
+          source: filter/out_vcf
         ref: ref
       out: [normalized-vcf]
-    #
-    # extract_snv:
-    #   run: extract_snv.cwl
-    #   scatter: extract_snv/vcf
-    #   in:
-    #       vcf: normalize/normalized-vcf
-    #   out: [extracted_snvs]
+
+    extract_snv:
+      run: extract_snv.cwl
+      scatter: extract_snv/vcf
+      in:
+          vcf: normalize/normalized-vcf
+      out: [extracted_snvs]
