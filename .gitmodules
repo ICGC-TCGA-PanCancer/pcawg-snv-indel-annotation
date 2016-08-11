@@ -1,0 +1,3 @@
+[submodule "Variantbam-for-dockstore"]
+	path = Variantbam-for-dockstore
+	url = git@github.com:ICGC-TCGA-PanCancer/Variantbam-for-dockstore.git

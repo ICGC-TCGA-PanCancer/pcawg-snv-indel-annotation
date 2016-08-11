@@ -17,7 +17,7 @@ requirements:
     dockerPull: pancancer/pcawg-oxog-tools
   - class: InlineJavascriptRequirement
     expressionLib:
-      - { $include: util.js }
+      - { $include: vcf_merge_util.js }
 
 inputs:
     - id: "#broad_snv"

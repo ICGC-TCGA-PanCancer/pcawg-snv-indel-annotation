@@ -22,7 +22,7 @@ inputs:
         position: 1
 
 outputs:
-    clean-vcf:
+    clean_vcf:
       type: File
       outputBinding:
         glob: "*.cleaned.vcf"
