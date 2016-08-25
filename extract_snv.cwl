@@ -13,7 +13,7 @@ dct:creator:
 
 requirements:
   - class: DockerRequirement
-    dockerPull: pancancer/pcawg-oxog-tools:1.0.0
+    dockerPull: quay.io/pancancer/pcawg-oxog-tools
 
 inputs:
     - id: "#vcf"

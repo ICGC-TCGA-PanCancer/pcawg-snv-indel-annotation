@@ -14,7 +14,7 @@ dct:creator:
 
 requirements:
   - class: DockerRequirement
-    dockerPull: pancancer/pcawg-oxog-tools
+    dockerPull: quay.io/pancancer/pcawg-oxog-tools
   - class: InlineJavascriptRequirement
     expressionLib:
       - { $include: vcf_merge_util.js }
