@@ -6,6 +6,10 @@ class: Workflow
 description: |
     This workflow will run OxoG, variantbam, and annotate.
 
+dct:creator:
+    foaf:name: "Solomon Shorser"
+    foaf:mbox: "solomon.shorser@oicr.on.ca"
+
 inputs:
     - id: vcfdir
       type: Directory

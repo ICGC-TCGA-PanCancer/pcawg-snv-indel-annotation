@@ -6,6 +6,10 @@ class: Workflow
 description: |
     This workflow will perform preprocessing steps on VCFs for the OxoG/Variantbam/Annotation workflow.
 
+dct:creator:
+    foaf:name: "Solomon Shorser"
+    foaf:mbox: "solomon.shorser@oicr.on.ca"
+
 inputs:
     - id: vcfdir
       type: Directory
