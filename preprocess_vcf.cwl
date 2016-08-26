@@ -3,6 +3,9 @@
 cwlVersion: v1.0
 class: Workflow
 
+description: |
+    This workflow will perform preprocessing steps on VCFs for the OxoG/Variantbam/Annotation workflow.
+
 inputs:
     - id: vcfdir
       type: Directory
