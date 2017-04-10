@@ -40,7 +40,7 @@ inputs:
     - id: vcfIndex
       type: File
       inputBinding:
-        position: 5
+        position: 6
     - id: refDataDir
       type: Directory
       inputBinding:

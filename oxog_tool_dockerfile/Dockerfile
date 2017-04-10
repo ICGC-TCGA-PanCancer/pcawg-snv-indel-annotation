@@ -12,13 +12,16 @@ RUN set -x \
     && rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
     && chmod +x /usr/local/bin/gosu \
     && gosu nobody true
-
 # if you want to clean up after    && apt-get purge -y --auto-remove ca-certificates wget
 
-COPY run_oxog_tool.py /cga/fh/pcawg_pipeline/run_oxog_tool.py
-
-VOLUME /cga/fh/pcawg_pipeline/jobResults_pipette/
-VOLUME /opt
+# VOLUME /var/lib/cwl
+# VOLUME /cga/fh/pcawg_pipeline/jobResults_pipette/
 
 # warning: this gives all future users, unknown and known the ability to gosu
 RUN chown root:users /usr/local/bin/gosu && chmod +s /usr/local/bin/gosu
+
+# WORKDIR /cga/fh/pcawg_pipeline/
+COPY run_oxog_tool.py /cga/fh/pcawg_pipeline/run_oxog_tool.py
+VOLUME /opt/
+#VOLUME /var
+#VOLUME /var/spool

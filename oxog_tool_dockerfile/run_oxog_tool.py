@@ -50,28 +50,29 @@ if not os.path.exists(OUTFILES):
     os.mkdir(OUTFILES)
 
 # if not os.path.exists(REFDIR):
-#     os.mkdir(REFDIR)
-#     # unpack reference files
-#     run('tar xvf %s -C %s'%(refdata1,REFDIR))
+#     os.symlink(refdata1,REFDIR)
+    # os.mkdir(REFDIR)
+    # # unpack reference files
+    # run('tar xvf %s -C %s'%(refdata1,REFDIR))
 
 #colocate the indexes with the bams via symlinks
 TUMOR_BAM = os.path.join(INPUTS,'tumor.bam')
 TUMOR_INDEX = os.path.join(INPUTS,'tumor.bam.bai')
 
 if not os.path.exists(TUMOR_BAM):
-    os.link(bam_tumor,TUMOR_BAM)
-    os.link(bam_tumor_index,TUMOR_INDEX)
+    os.symlink(bam_tumor,TUMOR_BAM)
+    os.symlink(bam_tumor_index,TUMOR_INDEX)
 
 INPUT_VCF_GZ = os.path.join(INPUTS,'input.vcf.gz')
 INPUT_VCF_GZ_TBI = os.path.join(INPUTS,'input.vcf.gz.tbi')
 if not os.path.exists(INPUT_VCF_GZ):
-    os.link(input_vcf_gz,INPUT_VCF_GZ)
-    os.link(input_vcf_gz_tbi,INPUT_VCF_GZ_TBI)
+    os.symlink(input_vcf_gz,INPUT_VCF_GZ)
+    os.symlink(input_vcf_gz_tbi,INPUT_VCF_GZ_TBI)
 
 
 
 #run the pipette synchronous runner to process the test data
-cmd_str = 'python3 %s/pipetteSynchronousRunner.py '%PIPETTE_SERVER_DIR + ' '.join([COMMDIR,OUTDIR,PIPELINE,COMMDIR,OUTDIR,pairID,TUMOR_BAM,oxoq,INPUT_VCF_GZ,'--ref',REFDIR])
+cmd_str = 'python3 %s/pipetteSynchronousRunner.py '%PIPETTE_SERVER_DIR + ' '.join([COMMDIR,OUTDIR,PIPELINE,COMMDIR,OUTDIR,pairID,TUMOR_BAM,oxoq,INPUT_VCF_GZ,'--ref',refdata1])
 
 pipeline_return_code = subprocess.call(cmd_str,shell=True)
 
