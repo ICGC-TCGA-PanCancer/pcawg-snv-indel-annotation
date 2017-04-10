@@ -16,8 +16,6 @@ requirements:
     dockerPull:  pcawg/oxog_tool
   - class: InlineJavascriptRequirement
 
-
-
 inputs:
     - id: tumourID
       type: string
@@ -27,15 +25,19 @@ inputs:
       type: File
       inputBinding:
         position: 2
-    # - id: normalBam
-    #   type: File
-    #   inputBinding:
-    #     position: 5
+    - id: tumourBamIndex
+      type: File
+      inputBinding:
+        position: 3
     - id: oxoQScore
       type: string
       inputBinding:
         position: 4
-    - id: vcfFile
+    - id: vcf
+      type: File
+      inputBinding:
+        position: 5
+    - id: vcfIndex
       type: File
       inputBinding:
         position: 5
@@ -43,23 +45,17 @@ inputs:
       type: Directory
       inputBinding:
           position: 7
-#          prefix: "--ref"
 
-arguments:
-    - valueFrom: "$(inputs.tumourBam.path).bai"
-      inputBinding:
-          position: 3
-    - valueFrom: "$(inputs.vcfFile.path).tbi"
-      inputBinding:
-          position: 6
 
 outputs:
     oxogTarFile:
+      type: File?
+      outputBinding:
+#          glob: "failing_intermediates.tar"
+          glob: "*.gnos_files.tar"
+    debuggingOutput:
       type: File
       outputBinding:
-          glob: "/cga/fh/pcawg_pipeline/jobResults_pipette/jobs/$(tumourID)/$(tumourID).gnos_files.tar"
+          glob: "failing_intermediates.tar"
 
-
-#baseCommand: [gosu, root, /cga/fh/pcawg_pipeline/pipelines/run_one_pipeline.bash, pcawg, /cga/fh/pcawg_pipeline/pipelines/oxog_pipeline.py]
-#baseCommand: [gosu, root]
 baseCommand: [gosu, root, python3, /cga/fh/pcawg_pipeline/run_oxog_tool.py ]
