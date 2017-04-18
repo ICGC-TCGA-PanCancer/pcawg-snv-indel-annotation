@@ -7,6 +7,26 @@ class: CommandLineTool
 description: |
     This tool will run OxoG. The OxoG tool was written by Dimitri Livitz. This CWL wrapper was written by Solomon Shorser.
 
+# Input file should look like this:
+# {
+#     "oxoQScore":"10.5",
+#     "tumourID":"123456789",
+#     "inputFileDirectory" : {
+#         "class":"Directory",
+#         "path":"/media/sshorser/Data/oxog_test_data",
+#         "location":"/media/sshorser/Data/oxog_test_data"
+#     },
+#     "tumourBamFilename" : "f5c9381090a53c54358feb2ba5b7a3d7.bam",
+#     "tumourBamIndexFilename" : "f5c9381090a53c54358feb2ba5b7a3d7.bam.bai",
+#     "vcfName" : "f7b84c09-15d4-3046-e040-11ac0c4847ff.svcp_1-0-3.20150120.somatic.snv_mnv.cleaned.vcf.gz",
+#     "vcfIndexName" : "f7b84c09-15d4-3046-e040-11ac0c4847ff.svcp_1-0-3.20150120.somatic.snv_mnv.cleaned.vcf.gz.tbi",
+#     "refDataDir": {
+#         "class":"Directory",
+#         "path":"/datastore/oxog_refdata",
+#         "location":"/datastore/oxog_refdata"
+#     }
+# }
+
 dct:creator:
     foaf:name: "Solomon Shorser"
     foaf:mbox: "solomon.shorser@oicr.on.ca"
@@ -15,17 +35,6 @@ requirements:
   - class: DockerRequirement
     dockerPull:  pcawg/oxog_tool
   - class: InlineJavascriptRequirement
-  # - class: InitialWorkDirRequirement
-  #   listing:
-  #     - entry: $(inputs.tumourBam)
-  #       writable: true
-  #     - entry: $(inputs.tumourBamIndex)
-  #       writable: true
-  #     - entry: $(inputs.vcf)
-  #       writable: true
-  #     - entry: $(inputs.vcfIndex)
-  #       writable: true
-
 
 inputs:
     - id: inputFileDirectory
@@ -66,7 +75,6 @@ outputs:
     oxogTarFile:
       type: File?
       outputBinding:
-#          glob: "failing_intermediates.tar"
           glob: "*.gnos_files.tar"
     debuggingOutput:
       type: File
