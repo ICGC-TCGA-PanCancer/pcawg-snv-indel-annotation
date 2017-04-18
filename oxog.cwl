@@ -15,30 +15,45 @@ requirements:
   - class: DockerRequirement
     dockerPull:  pcawg/oxog_tool
   - class: InlineJavascriptRequirement
+  # - class: InitialWorkDirRequirement
+  #   listing:
+  #     - entry: $(inputs.tumourBam)
+  #       writable: true
+  #     - entry: $(inputs.tumourBamIndex)
+  #       writable: true
+  #     - entry: $(inputs.vcf)
+  #       writable: true
+  #     - entry: $(inputs.vcfIndex)
+  #       writable: true
+
 
 inputs:
+    - id: inputFileDirectory
+      type: Directory
+      inputBinding:
+          position: 0
     - id: tumourID
       type: string
       inputBinding:
         position: 1
-    - id: tumourBam
-      type: File
+    - id: tumourBamFilename
+      type: string
       inputBinding:
         position: 2
-    - id: tumourBamIndex
-      type: File
+    - id: tumourBamIndexFilename
+      type: string
       inputBinding:
         position: 3
     - id: oxoQScore
       type: string
       inputBinding:
         position: 4
-    - id: vcf
-      type: File
+    - id: vcfName
+      type: string
       inputBinding:
         position: 5
-    - id: vcfIndex
-      type: File
+    - id: vcfIndexName
+      type: string
       inputBinding:
         position: 6
     - id: refDataDir
@@ -57,5 +72,9 @@ outputs:
       type: File
       outputBinding:
           glob: "failing_intermediates.tar"
+    pipetteJobs:
+      type: Directory?
+      outputBinding:
+          glob: "pipette_jobs/"
 
 baseCommand: [gosu, root, python3, /cga/fh/pcawg_pipeline/run_oxog_tool.py ]

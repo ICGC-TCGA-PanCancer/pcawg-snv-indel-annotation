@@ -22,7 +22,10 @@ RUN chown root:users /usr/local/bin/gosu && chmod +s /usr/local/bin/gosu
 
 # WORKDIR /cga/fh/pcawg_pipeline/
 COPY run_oxog_tool.py /cga/fh/pcawg_pipeline/run_oxog_tool.py
-VOLUME /opt/
-VOLUME /root/.python-eggs
+VOLUME ["/opt/","/root/.python-eggs","/var/spool/cwl","/var/lib/cwl"]
+# VOLUME /root/.python-eggs
+#
+# VOLUME /var/spool/cwl
+# VOLUME /var/lib/cwl
 #VOLUME /var
 #VOLUME /var/spool
