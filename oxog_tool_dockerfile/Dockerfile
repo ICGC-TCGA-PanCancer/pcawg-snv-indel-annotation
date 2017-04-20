@@ -17,6 +17,7 @@ RUN set -x \
 # warning: this gives all future users, unknown and known the ability to gosu
 RUN chown root:users /usr/local/bin/gosu && chmod +s /usr/local/bin/gosu
 
-# WORKDIR /cga/fh/pcawg_pipeline/
 COPY run_oxog_tool.py /cga/fh/pcawg_pipeline/run_oxog_tool.py
+# The Matlab cache directory needs to be writable so put it it in /tmp
+ENV MCR_CACHE_ROOT /tmp/
 VOLUME ["/opt/", "/root/.python-eggs"]
