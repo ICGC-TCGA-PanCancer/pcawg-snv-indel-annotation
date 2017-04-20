@@ -18,6 +18,8 @@ run('/cga/fh/pcawg_pipeline/utils/monitor_start.py')
 #copy wdl args to python vars
 inputDir = sys.argv[1]
 
+#os.chmod(inputDir, 0o777)
+
 pairID =sys.argv[2] #'${pairID}'
 bam_tumor = inputDir + '/' + sys.argv[3] #'${bam_tumor}'
 bam_tumor_index = inputDir + '/' + sys.argv[4] #'${bam_tumor_index}'
@@ -26,7 +28,6 @@ input_vcf_gz = inputDir + '/' + sys.argv[6] #'${input_vcf_gz}'
 input_vcf_gz_tbi = inputDir + '/' + sys.argv[7] #'${input_vcf_gz_tbi}'
 
 refdata1=sys.argv[8] #'${refdata1}'
-
 
 #define the pipeline
 PIPELINE='/cga/fh/pcawg_pipeline/pipelines/oxog_pipeline.py'
@@ -102,25 +103,30 @@ def make_links(subpaths, new_names=None):
             sys.stderr.write('file already exists: %s'%new_path)
             continue
         os.link(realsubpath,new_path) #hard link, to survive export
+        # make sure everyone *outside* the container can read the output files.
+        os.chmod(realsubpath, 0o666)
+        os.chmod(new_path, 0o666)
 
+
+full_path_to_vcf = sys.argv[6]
+full_path_to_vcf_tbi = sys.argv[7]
+
+path_to_oxog_vcf = full_path_to_vcf.replace('.vcf.gz','.oxoG.vcf.gz')
+path_to_oxog_tbi = full_path_to_vcf_tbi.replace('.vcf.gz.tbi','.oxoG.vcf.gz.tbi')
 
 subpaths = [
-    'pipette_jobs/links_for_gnos/oxoG/sample.oxoG.tar.gz',
-    'pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/input.oxoG.vcf.gz',
-    'pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/input.oxoG.vcf.gz.tbi',
-    'pipette_jobs/oxoG/sample.oxoG3.maf.annotated.all.maf.annotated'
+    '/var/spool/cwl/pipette_jobs/links_for_gnos/oxoG/'+pairID+'.oxoG.tar.gz',
+    '/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_vcf,
+    '/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_tbi,
+    '/var/spool/cwl/pipette_jobs/oxoG/'+pairID+'.oxoG3.maf.annotated.all.maf.annotated'
 ]
 new_names = [
-    'sample.oxoG.supplementary.tar.gz',
-    'sample.oxoG.vcf.gz',
-    'sample.oxoG.vcf.gz.tbi',
-    'sample.oxoG.maf'
+    pairID+'.oxoG.supplementary.tar.gz',
+    path_to_oxog_vcf,
+    path_to_oxog_tbi,
+    pairID+'.oxoG.maf'
 ]
 make_links(subpaths,new_names)
-
-
-
-
 
 #########################
 # end task-specific calls
