@@ -70,7 +70,6 @@ inputs:
       inputBinding:
           position: 7
 
-
 outputs:
     debuggingOutput:
       type: File
@@ -96,9 +95,5 @@ outputs:
       type: File
       outputBinding:
           glob: "output_files/*summary.usage.txt"
-    # outputFiles:
-    #   type: Directory
-    #   outputBinding:
-    #       glob: "output_files"
 
 baseCommand: [ python3, /cga/fh/pcawg_pipeline/run_oxog_tool.py ]
