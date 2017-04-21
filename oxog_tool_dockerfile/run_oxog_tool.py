@@ -16,8 +16,6 @@ run('/cga/fh/pcawg_pipeline/utils/monitor_start.py')
 #copy wdl args to python vars
 inputDir = sys.argv[1]
 
-#os.chmod(inputDir, 0o777)
-
 pairID =sys.argv[2] #'${pairID}'
 bam_tumor = inputDir + '/' + sys.argv[3] #'${bam_tumor}'
 bam_tumor_index = inputDir + '/' + sys.argv[4] #'${bam_tumor_index}'
@@ -84,8 +82,6 @@ fid.write(usageheader)
 fid.writelines(mus)
 fid.close()
 
-
-
 def make_links(subpaths, new_names=None):
     for i,subpath in enumerate(subpaths):
         if not os.path.exists(subpath):
@@ -104,7 +100,6 @@ def make_links(subpaths, new_names=None):
         # make sure everyone *outside* the container can read the output files.
         os.chmod(realsubpath, 0o666)
         os.chmod(new_path, 0o666)
-
 
 full_path_to_vcf = sys.argv[6]
 full_path_to_vcf_tbi = sys.argv[7]
