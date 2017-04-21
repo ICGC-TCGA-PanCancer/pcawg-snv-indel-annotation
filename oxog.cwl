@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 
-#run as dockstore --debug tool launch --descriptor cwl --local-entry --entry ./oxog.cwl --json oxog_tool_input.json
+#run as: dockstore --debug tool launch --descriptor cwl --local-entry --entry ./oxog.cwl --json oxog_tool_input.json
 cwlVersion: v1.0
 class: CommandLineTool
 
@@ -72,17 +72,33 @@ inputs:
 
 
 outputs:
-    oxogTarFile:
-      type: File?
-      outputBinding:
-          glob: "*.gnos_files.tar"
     debuggingOutput:
       type: File
       outputBinding:
           glob: "failing_intermediates.tar"
-    pipetteJobs:
-      type: Directory?
+    oxogVCF:
+      type: File
       outputBinding:
-          glob: "pipette_jobs/"
+          glob: "output_files/*oxoG.vcf.gz"
+    oxogTBI:
+      type: File
+      outputBinding:
+          glob: "output_files/*oxoG.vcf.gz.tbi"
+    oxogMAF:
+      type: File
+      outputBinding:
+          glob: "output_files/*oxoG.maf"
+    oxogSupplementaryFile:
+      type: File
+      outputBinding:
+          glob: "output_files/*oxoG.supplementary.tar.gz"
+    usageInfo:
+      type: File
+      outputBinding:
+          glob: "output_files/*summary.usage.txt"
+    # outputFiles:
+    #   type: Directory
+    #   outputBinding:
+    #       glob: "output_files"
 
-baseCommand: [gosu, root, python3, /cga/fh/pcawg_pipeline/run_oxog_tool.py ]
+baseCommand: [ python3, /cga/fh/pcawg_pipeline/run_oxog_tool.py ]

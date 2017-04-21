@@ -8,8 +8,6 @@ def run(cmd):
     print(cmd)
     subprocess.check_call(cmd,shell=True)
 
-run('ln -sTf `pwd` /opt/execution')
-run('ln -sTf `pwd`/../inputs /opt/inputs')
 run('/cga/fh/pcawg_pipeline/utils/monitor_start.py')
 
 # start task-specific calls
