@@ -41,34 +41,41 @@ inputs:
       type: Directory
       inputBinding:
           position: 0
+          prefix: --inputDir
     - id: tumourID
       type: string
       inputBinding:
-        position: 1
+          position: 1
+          prefix: --pairID
     - id: tumourBamFilename
       type: string
       inputBinding:
-        position: 2
+          position: 2
+          prefix: --bamName
     - id: tumourBamIndexFilename
       type: string
       inputBinding:
-        position: 3
+          position: 3
+          prefix: --baiName
     - id: oxoQScore
       type: string
       inputBinding:
-        position: 4
-    - id: vcfName
-      type: string
+          position: 4
+          prefix: --oxoqScore
+    - id: vcfNames
+      type: string[]
       inputBinding:
-        position: 5
-    - id: vcfIndexName
-      type: string
-      inputBinding:
-        position: 6
+          position: 5
+          prefix: --vcfs
+    # - id: vcfIndexName
+    #   type: string
+    #   inputBinding:
+    #       position: 6
     - id: refDataDir
       type: Directory
       inputBinding:
           position: 7
+          prefix: --refDataDir
 
 outputs:
     debuggingOutput:

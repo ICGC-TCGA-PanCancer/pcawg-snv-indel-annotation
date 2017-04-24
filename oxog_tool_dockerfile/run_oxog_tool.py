@@ -3,6 +3,7 @@ import os
 import sys
 import tarfile
 import shutil
+import argparse
 
 def run(cmd):
     print(cmd)
@@ -12,18 +13,34 @@ run('/cga/fh/pcawg_pipeline/utils/monitor_start.py')
 
 # start task-specific calls
 ##########################
+parser = argparse.ArgumentParser()
+parser.add_argument('--inputDir')
+parser.add_argument('--pairID')
+parser.add_argument('--bamName')
+parser.add_argument('--baiName')
+parser.add_argument('--oxoqScore')
+parser.add_argument('--refDataDir')
+parser.add_argument('--vcfs', nargs='+')
+args = parser.parse_args()
+argvars = vars(args)
 
 #copy wdl args to python vars
-inputDir = sys.argv[1]
+inputDir = argvars['inputDir'] #sys.argv[1]
 
-pairID =sys.argv[2] #'${pairID}'
-bam_tumor = inputDir + '/' + sys.argv[3] #'${bam_tumor}'
-bam_tumor_index = inputDir + '/' + sys.argv[4] #'${bam_tumor_index}'
-oxoq = sys.argv[5] #'${oxoq}'
-input_vcf_gz = inputDir + '/' + sys.argv[6] #'${input_vcf_gz}'
-input_vcf_gz_tbi = inputDir + '/' + sys.argv[7] #'${input_vcf_gz_tbi}'
+pairID = argvars['pairID'] #sys.argv[2] #'${pairID}'
+bam_tumor = inputDir + '/' + argvars['bamName'] # sys.argv[3] #'${bam_tumor}'
+bam_tumor_index = inputDir + '/' + argvars['baiName'] #sys.argv[4] #'${bam_tumor_index}'
+oxoq = argvars['oxoqScore'] # sys.argv[5] #'${oxoq}'
+#input_vcf_gz = inputDir + '/' +  sys.argv[6] #'${input_vcf_gz}'
+#input_vcf_gz_tbi = inputDir + '/' + sys.argv[7] #'${input_vcf_gz_tbi}'
+vcfs = ''
+for vcf in argvars['vcfs']:
+    vcfs +=  (' ' + inputDir + '/' + vcf )
 
-refdata1=sys.argv[8] #'${refdata1}'
+#vcfs = vcfs[:-1]
+#vcfs = ','.join(argvars['vcfs'])
+
+refdata1=argvars['refDataDir'] #sys.argv[8] #'${refdata1}'
 
 #define the pipeline
 PIPELINE='/cga/fh/pcawg_pipeline/pipelines/oxog_pipeline.py'
@@ -49,8 +66,8 @@ if not os.path.exists(OUTFILES):
     os.mkdir(OUTFILES)
 
 #run the pipette synchronous runner to process the test data
-cmd_str = 'python3 %s/pipetteSynchronousRunner.py '%PIPETTE_SERVER_DIR + ' '.join([COMMDIR,OUTDIR,PIPELINE,COMMDIR,OUTDIR,pairID,bam_tumor,oxoq,input_vcf_gz,'--ref',refdata1])
-
+cmd_str = 'python3 %s/pipetteSynchronousRunner.py '%PIPETTE_SERVER_DIR + ' '.join([COMMDIR,OUTDIR,PIPELINE,COMMDIR,OUTDIR,pairID,bam_tumor,oxoq,'--ref',refdata1,vcfs])
+sys.stderr.write('executing command: '+cmd_str+'\n')
 pipeline_return_code = subprocess.call(cmd_str,shell=True)
 
 # capture module usage
@@ -101,24 +118,29 @@ def make_links(subpaths, new_names=None):
         os.chmod(realsubpath, 0o666)
         os.chmod(new_path, 0o666)
 
-full_path_to_vcf = sys.argv[6]
-full_path_to_vcf_tbi = sys.argv[7]
+#full_path_to_vcf = sys.argv[6]
+#full_path_to_vcf_tbi = sys.argv[7]
 
-path_to_oxog_vcf = full_path_to_vcf.replace('.vcf.gz','.oxoG.vcf.gz')
-path_to_oxog_tbi = full_path_to_vcf_tbi.replace('.vcf.gz.tbi','.oxoG.vcf.gz.tbi')
+subpaths = ['/var/spool/cwl/pipette_jobs/links_for_gnos/oxoG/'+pairID+'.oxoG.tar.gz',
+            '/var/spool/cwl/pipette_jobs/oxoG/'+pairID+'.oxoG3.maf.annotated.all.maf.annotated']
 
-subpaths = [
-    '/var/spool/cwl/pipette_jobs/links_for_gnos/oxoG/'+pairID+'.oxoG.tar.gz',
-    '/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_vcf,
-    '/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_tbi,
-    '/var/spool/cwl/pipette_jobs/oxoG/'+pairID+'.oxoG3.maf.annotated.all.maf.annotated'
-]
-new_names = [
-    pairID+'.oxoG.supplementary.tar.gz',
-    path_to_oxog_vcf,
-    path_to_oxog_tbi,
-    pairID+'.oxoG.maf'
-]
+new_names = [pairID+'.oxoG.supplementary.tar.gz',
+            pairID+'.oxoG.maf']
+
+for vcf in argvars['vcfs']:
+    path_to_oxog_vcf = vcf.replace('.vcf.gz','.oxoG.vcf.gz')
+    path_to_oxog_tbi = vcf.replace('.vcf.gz.tbi','.oxoG.vcf.gz.tbi')
+    subpaths = [
+        '/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_vcf,
+        '/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_tbi
+    ]
+
+    new_names = [
+        path_to_oxog_vcf,
+        path_to_oxog_tbi
+    ]
+
+
 make_links(subpaths,new_names)
 
 #########################
