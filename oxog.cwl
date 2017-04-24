@@ -18,8 +18,11 @@ description: |
 #     },
 #     "tumourBamFilename" : "f5c9381090a53c54358feb2ba5b7a3d7.bam",
 #     "tumourBamIndexFilename" : "f5c9381090a53c54358feb2ba5b7a3d7.bam.bai",
-#     "vcfName" : "f7b84c09-15d4-3046-e040-11ac0c4847ff.svcp_1-0-3.20150120.somatic.snv_mnv.cleaned.vcf.gz",
-#     "vcfIndexName" : "f7b84c09-15d4-3046-e040-11ac0c4847ff.svcp_1-0-3.20150120.somatic.snv_mnv.cleaned.vcf.gz.tbi",
+#     "vcfNames": [
+#         "f7b84c09-15d4-3046-e040-11ac0c4847ff.svcp_1-0-3.20150120.somatic.snv_mnv.cleaned.vcf.gz",
+#         "f7b84c09-15d4-3046-e040-11ac0c4847ff.dkfz-snvCalling_1-0-132-1.20150626.somatic.snv_mnv.cleaned.vcf.gz",
+#         "f7b84c09-15d4-3046-e040-11ac0c4847ff.broad-mutect-v3.20160222.somatic.snv_mnv.cleaned.vcf.gz"
+#     ],
 #     "refDataDir": {
 #         "class":"Directory",
 #         "path":"/datastore/oxog_refdata",
