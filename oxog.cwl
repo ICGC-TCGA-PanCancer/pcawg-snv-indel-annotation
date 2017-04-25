@@ -70,10 +70,6 @@ inputs:
       inputBinding:
           position: 5
           prefix: --vcfs
-    # - id: vcfIndexName
-    #   type: string
-    #   inputBinding:
-    #       position: 6
     - id: refDataDir
       type: Directory
       inputBinding:
@@ -86,11 +82,11 @@ outputs:
       outputBinding:
           glob: "failing_intermediates.tar"
     oxogVCF:
-      type: File
+      type: File[]
       outputBinding:
           glob: "output_files/*oxoG.vcf.gz"
     oxogTBI:
-      type: File
+      type: File[]
       outputBinding:
           glob: "output_files/*oxoG.vcf.gz.tbi"
     oxogMAF:

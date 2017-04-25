@@ -25,22 +25,18 @@ args = parser.parse_args()
 argvars = vars(args)
 
 #copy wdl args to python vars
-inputDir = argvars['inputDir'] #sys.argv[1]
+inputDir = argvars['inputDir']
 
-pairID = argvars['pairID'] #sys.argv[2] #'${pairID}'
-bam_tumor = inputDir + '/' + argvars['bamName'] # sys.argv[3] #'${bam_tumor}'
-bam_tumor_index = inputDir + '/' + argvars['baiName'] #sys.argv[4] #'${bam_tumor_index}'
-oxoq = argvars['oxoqScore'] # sys.argv[5] #'${oxoq}'
-#input_vcf_gz = inputDir + '/' +  sys.argv[6] #'${input_vcf_gz}'
-#input_vcf_gz_tbi = inputDir + '/' + sys.argv[7] #'${input_vcf_gz_tbi}'
+pairID = argvars['pairID']
+bam_tumor = inputDir + '/' + argvars['bamName']
+bam_tumor_index = inputDir + '/' + argvars['baiName']
+oxoq = argvars['oxoqScore']
+
 vcfs = ''
 for vcf in argvars['vcfs']:
     vcfs +=  (' ' + inputDir + '/' + vcf )
 
-#vcfs = vcfs[:-1]
-#vcfs = ','.join(argvars['vcfs'])
-
-refdata1=argvars['refDataDir'] #sys.argv[8] #'${refdata1}'
+refdata1=argvars['refDataDir']
 
 #define the pipeline
 PIPELINE='/cga/fh/pcawg_pipeline/pipelines/oxog_pipeline.py'
@@ -67,7 +63,7 @@ if not os.path.exists(OUTFILES):
 
 #run the pipette synchronous runner to process the test data
 cmd_str = 'python3 %s/pipetteSynchronousRunner.py '%PIPETTE_SERVER_DIR + ' '.join([COMMDIR,OUTDIR,PIPELINE,COMMDIR,OUTDIR,pairID,bam_tumor,oxoq,'--ref',refdata1,vcfs])
-sys.stderr.write('executing command: '+cmd_str+'\n')
+print('executing command: '+cmd_str+'\n')
 pipeline_return_code = subprocess.call(cmd_str,shell=True)
 
 # capture module usage
@@ -79,6 +75,7 @@ for root, dirs, files in os.walk(OUTDIR):
         usageheader = fid.readline()
         usage = fid.readline()
         mus.append(usage)
+
 mus.sort()
 # output usage for failures to stdout
 for line in mus:
@@ -100,6 +97,8 @@ fid.writelines(mus)
 fid.close()
 
 def make_links(subpaths, new_names=None):
+    print('subpaths: ' + str(subpaths))
+    print('new names: ' + str(new_names))
     for i,subpath in enumerate(subpaths):
         if not os.path.exists(subpath):
             sys.stderr.write ('file not found: %s'%subpath)
@@ -118,9 +117,6 @@ def make_links(subpaths, new_names=None):
         os.chmod(realsubpath, 0o666)
         os.chmod(new_path, 0o666)
 
-#full_path_to_vcf = sys.argv[6]
-#full_path_to_vcf_tbi = sys.argv[7]
-
 subpaths = ['/var/spool/cwl/pipette_jobs/links_for_gnos/oxoG/'+pairID+'.oxoG.tar.gz',
             '/var/spool/cwl/pipette_jobs/oxoG/'+pairID+'.oxoG3.maf.annotated.all.maf.annotated']
 
@@ -129,16 +125,10 @@ new_names = [pairID+'.oxoG.supplementary.tar.gz',
 
 for vcf in argvars['vcfs']:
     path_to_oxog_vcf = vcf.replace('.vcf.gz','.oxoG.vcf.gz')
-    path_to_oxog_tbi = vcf.replace('.vcf.gz.tbi','.oxoG.vcf.gz.tbi')
-    subpaths = [
-        '/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_vcf,
-        '/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_tbi
-    ]
-
-    new_names = [
-        path_to_oxog_vcf,
-        path_to_oxog_tbi
-    ]
+    path_to_oxog_tbi = vcf.replace('.vcf.gz','.oxoG.vcf.gz.tbi')
+    subpaths.extend(['/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_vcf,
+                    '/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_tbi])
+    new_names.extend([path_to_oxog_vcf,path_to_oxog_tbi])
 
 
 make_links(subpaths,new_names)
