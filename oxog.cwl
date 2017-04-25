@@ -18,8 +18,11 @@ description: |
 #     },
 #     "tumourBamFilename" : "f5c9381090a53c54358feb2ba5b7a3d7.bam",
 #     "tumourBamIndexFilename" : "f5c9381090a53c54358feb2ba5b7a3d7.bam.bai",
-#     "vcfName" : "f7b84c09-15d4-3046-e040-11ac0c4847ff.svcp_1-0-3.20150120.somatic.snv_mnv.cleaned.vcf.gz",
-#     "vcfIndexName" : "f7b84c09-15d4-3046-e040-11ac0c4847ff.svcp_1-0-3.20150120.somatic.snv_mnv.cleaned.vcf.gz.tbi",
+#     "vcfNames": [
+#         "f7b84c09-15d4-3046-e040-11ac0c4847ff.svcp_1-0-3.20150120.somatic.snv_mnv.cleaned.vcf.gz",
+#         "f7b84c09-15d4-3046-e040-11ac0c4847ff.dkfz-snvCalling_1-0-132-1.20150626.somatic.snv_mnv.cleaned.vcf.gz",
+#         "f7b84c09-15d4-3046-e040-11ac0c4847ff.broad-mutect-v3.20160222.somatic.snv_mnv.cleaned.vcf.gz"
+#     ],
 #     "refDataDir": {
 #         "class":"Directory",
 #         "path":"/datastore/oxog_refdata",
@@ -41,34 +44,37 @@ inputs:
       type: Directory
       inputBinding:
           position: 0
+          prefix: --inputDir
     - id: tumourID
       type: string
       inputBinding:
-        position: 1
+          position: 1
+          prefix: --pairID
     - id: tumourBamFilename
       type: string
       inputBinding:
-        position: 2
+          position: 2
+          prefix: --bamName
     - id: tumourBamIndexFilename
       type: string
       inputBinding:
-        position: 3
+          position: 3
+          prefix: --baiName
     - id: oxoQScore
       type: string
       inputBinding:
-        position: 4
-    - id: vcfName
-      type: string
+          position: 4
+          prefix: --oxoqScore
+    - id: vcfNames
+      type: string[]
       inputBinding:
-        position: 5
-    - id: vcfIndexName
-      type: string
-      inputBinding:
-        position: 6
+          position: 5
+          prefix: --vcfs
     - id: refDataDir
       type: Directory
       inputBinding:
           position: 7
+          prefix: --refDataDir
 
 outputs:
     debuggingOutput:
@@ -76,11 +82,11 @@ outputs:
       outputBinding:
           glob: "failing_intermediates.tar"
     oxogVCF:
-      type: File
+      type: File[]
       outputBinding:
           glob: "output_files/*oxoG.vcf.gz"
     oxogTBI:
-      type: File
+      type: File[]
       outputBinding:
           glob: "output_files/*oxoG.vcf.gz.tbi"
     oxogMAF:
