@@ -15,26 +15,35 @@ inputs:
       type: Directory
     - id: ref
       type: File
-    - id: in_dir
-      type: string
     - id: out_dir
       type: string
 
+# There are three output sets:
+# - The merged VCFs.
+# - The VCFs that are cleaned and normalized.
+# - The SNVs that were extracted from INDELs (if there were any - usually there are none).
 outputs:
-    outFiles:
+    mergedVCFs:
       type: File[]
-#      outputSource: normalize/normalized-vcf
       outputSource: merge_vcfs/output
+    normalizedVCFs:
+      type: File[]
+      outputSource: normalize/normalized-vcf
+    extractedSNVs:
+      type: File[]
+      outputSource: extract_snv/extracted_snvs
+
 
 requirements:
     - class: ScatterFeatureRequirement
     - class: StepInputExpressionRequirement
     - class: InlineJavascriptRequirement
       expressionLib:
-        - { $include: preprocess_util.js }
+        - { $include: ./preprocess_util.js }
         # Shouldn't have to *explicitly* include vcf_merge_util.js but there's
         # probably a bug somewhere that makes it necessary
-        - { $include: vcf_merge_util.js }
+        - { $include: ./vcf_merge_util.js }
+    - class: SubworkflowFeatureRequirement
 
 steps:
     pass_filter:
@@ -115,7 +124,7 @@ steps:
         outputs:
           snvs_for_merge: File[]
         expression: |
-            $({ snvs_for_merge: filterFor("dkfz-snvCalling","snv_mnv",inputs.clean_vcfs).concat(filterFor("dkfz-snvCalling","snv_mnv",inputs.extracted_snvs)) })
+            $({ snvs_for_merge: (filterFor("dkfz-snvCalling","snv_mnv",inputs.clean_vcfs)).concat(filterFor("dkfz-snvCalling","snv_mnv",inputs.extracted_snvs)) })
 
     gather_broad_snvs:
       in:
@@ -132,7 +141,7 @@ steps:
         outputs:
           snvs_for_merge: File[]
         expression: |
-            $({ snvs_for_merge: filterFor("broad-mutect","snv_mnv",inputs.clean_vcfs).concat(filterFor("broad-mutect","snv_mnv",inputs.extracted_snvs)) })
+            $({ snvs_for_merge: (filterFor("broad-mutect","snv_mnv",inputs.clean_vcfs)).concat(filterFor("broad-mutect","snv_mnv",inputs.extracted_snvs)) })
 
     gather_muse_snvs:
       in:
@@ -149,7 +158,7 @@ steps:
         outputs:
           snvs_for_merge: File[]
         expression: |
-            $({ snvs_for_merge: filterFor("MUSE","snv_mnv",inputs.clean_vcfs).concat(filterFor("MUSE","snv_mnv",inputs.extracted_snvs)) })
+            $({ snvs_for_merge: (filterFor("MUSE","snv_mnv",inputs.clean_vcfs)).concat(filterFor("MUSE","snv_mnv",inputs.extracted_snvs)) })
 
     #############################################
     # Gather INDELs on a per-workflow basis
@@ -260,7 +269,8 @@ steps:
       run:
         vcf_merge.cwl
       in:
-        sanger_snv: gather_sanger_snvs/snvs_for_merge
+        sanger_snv:
+            source: gather_sanger_snvs/snvs_for_merge
         de_snv:
             source: gather_dkfz_embl_snvs/snvs_for_merge
         broad_snv:
@@ -281,7 +291,6 @@ steps:
             source: gather_dkfz_embl_svs/svs_for_merge
         broad_sv:
             source: gather_broad_svs/svs_for_merge
-        in_dir: in_dir
         out_dir: out_dir
       out:
           [output]
