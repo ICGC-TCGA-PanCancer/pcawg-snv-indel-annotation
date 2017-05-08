@@ -12,3 +12,13 @@ function filterFileArray(str, inArr)
 	}
 	return arr;
 }
+
+function appendBam(str)
+{
+	return str.concat(".bam")
+}
+
+function appendBai(str)
+{
+	return str.concat(".bai")
+}
