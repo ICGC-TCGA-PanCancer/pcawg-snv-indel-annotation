@@ -37,43 +37,40 @@ inputs:
         type: array
         items:
           type: record
-          name: tumour
           fields:
             tumourId:
               type: string
-              inputBinding:
-                  position: 0
             bamFileName:
               type: string
-              inputBinding:
-                  position: 2
             associatedVcfs:
               type: string[]
-              inputBinding:
-                  position: 1
 
 
-outputs: []
+outputs:
+    preprocessed_files_merged:
+        type: File[]
+        outputSource: preprocess_vcfs/mergedVCFs
     # blah:
     #   type: File[]
     #     outputSource: filter_merged_sv/merged_sv_vcf
 #     miniBams:
 #       type: File[]
-# #      outputSource: normalize/normalized-vcf
+# #      outputSource: normalize/normalized-vcfminibamName
 #       outputSource: run_variant_bam/minibam
 #     # oxogOutputs:outFiles
 
 requirements:
     - class: ScatterFeatureRequirement
     - class: StepInputExpressionRequirement
+    - class: MultipleInputFeatureRequirement
     - class: InlineJavascriptRequirement
-    - class: SubworkflowFeatureRequirement
       expressionLib:
         - { $include: oxog_varbam_annotate_util.js }
         # Shouldn't have to *explicitly* include these but there's
         # probably a bug somewhere that makes it necessary
         - { $include: preprocess_util.js }
         - { $include: vcf_merge_util.js }
+    - class: SubworkflowFeatureRequirement
 
 steps:
     #preprocess the VCFs
@@ -89,61 +86,66 @@ steps:
     #
     # Need some ExpressionTool steps to get the specific names of merged VCFs to
     # feed into variantbam.
-    # filter_merged_snv:
-    #   in:
-    #     in_vcfs: preprocess_vcfs/mergedVCFs
-    #   out: [merged_snv_vcf]
-    #   run:
-    #     class: ExpressionTool
-    #     inputs:
-    #       in_vcfs: File[]
-    #     outputs:
-    #       merged_indel_vcf: File
-    #     expression: |
-    #       $({ merged_snv_vcf: filterFileArray("snv",inputs.in_vcfs) })
-    #
-    # filter_merged_indel:
-    #   in:
-    #     in_vcfs: preprocess_vcfs/mergedVCFs
-    #   out: [merged_indel_vcf]
-    #   run:
-    #     class: ExpressionTool
-    #     inputs:
-    #       in_vcfs: File[]
-    #     outputs:
-    #       merged_indel_vcf: File
-    #     expression: |
-    #       $({ merged_indel_vcf: filterFileArray("indel",inputs.in_vcfs) })
-    #
-    # filter_merged_sv:
-    #   in:
-    #     in_vcfs: preprocess_vcfs/mergedVCFs
-    #   out: [merged_sv_vcf]
-    #   run:
-    #     class: ExpressionTool
-    #     inputs:
-    #       in_vcfs: File[]
-    #     outputs:
-    #       merged_sv_vcf: File
-    #     expression: |
-    #       $({ merged_sv_vcf: filterFileArray("sv",inputs.in_vcfs) })
+    filter_merged_snv:
+      in:
+        in_vcfs: preprocess_vcfs/mergedVCFs
+      run:
+        class: ExpressionTool
+        inputs:
+          in_vcfs: File[]
+        outputs:
+          merged_snv_vcf: File
+        expression: |
+          $({ merged_snv_vcf: filterFileArray("snv",inputs.in_vcfs) })
+      out: [merged_snv_vcf]
+
+    filter_merged_indel:
+      in:
+        in_vcfs: preprocess_vcfs/mergedVCFs
+      run:
+        class: ExpressionTool
+        inputs:
+          in_vcfs: File[]
+        outputs:
+          merged_indel_vcf: File
+        expression: |
+          $({ merged_indel_vcf: filterFileArray("indel",inputs.in_vcfs) })
+      out: [merged_indel_vcf]
+
+
+    filter_merged_sv:
+      in:
+        in_vcfs: preprocess_vcfs/mergedVCFs
+      run:
+        class: ExpressionTool
+        inputs:
+          in_vcfs: File[]
+        outputs:
+          merged_sv_vcf: File
+        expression: |
+          $({ merged_sv_vcf: filterFileArray("sv",inputs.in_vcfs) })
+      out: [merged_sv_vcf]
 
 
     # Do variantbam
     # This needs to be run for each tumour, using VCFs that are merged pipelines per tumour.
-    # run_variant_bam:
-    #   run: Variantbam-for-dockstore/variantbam.cwl
-    #   in:
-    #     input-bam: tumourBams
-    #     outfile: minibamName
-    #     snv-padding: snv-padding
-    #     sv-padding: sv-padding
-    #     indel-padding: indel-padding
-    #     input-snv: filter_merged_snv/merged_snv_vcf
-    #     input-sv: filter_merged_sv/merged_sv_vcf
-    #     input-indel: filter_merged_indel/merged_indel_vcf
-    #   scatter: run_variant_bam/input-bam
-    #   out: [minibam]
+    run_variant_bam:
+      run: Variantbam-for-dockstore/variantbam.cwl
+      scatter: [ input-bam ]
+      in:
+        input-bam:
+          source: tumours
+          valueFrom: $(self.bamFileName)
+        outfile:
+          source: tumours
+          valueFrom: $("mini-".concat(self.tumourId).concat(".bam"))
+        snv-padding: snv-padding
+        sv-padding: sv-padding
+        indel-padding: indel-padding
+        input-snv: filter_merged_snv/merged_snv_vcf
+        input-sv: filter_merged_sv/merged_sv_vcf
+        input-indel: filter_merged_indel/merged_indel_vcf
+      out: [minibam]
 
     # Do OxoG. Will also need some additional intermediate steps to sort out the
     # inputs and ensure that the  VCFs and BAM for the same tumour are run
