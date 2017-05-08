@@ -53,16 +53,10 @@ inputs:
     - id: "#smufin_indel"
       type: File[]
 
-    - id: "#in_dir"
-      type: string
-      inputBinding:
-        position: 12
-        prefix: --indir
-
     - id: "#out_dir"
       type: string
       inputBinding:
-        position: 13
+        position: 12
         prefix: --outdir
 outputs:
     output:
