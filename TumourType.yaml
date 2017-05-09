@@ -1,0 +1,17 @@
+class: SchemaDefRequirement
+types:
+  - name: TumourType
+    type: record
+    fields:
+      - name: tumourId
+        type: string
+        inputBinding:
+            position: 0
+      - name: bamFileName
+        type: string
+        inputBinding:
+            position: 1
+      - name: associatedVcfs
+        type: string[]
+        inputBinding:
+            position: 2
