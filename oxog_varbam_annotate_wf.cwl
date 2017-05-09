@@ -11,6 +11,20 @@ dct:creator:
     foaf:name: "Solomon Shorser"
     foaf:mbox: "solomon.shorser@oicr.on.ca"
 
+requirements:
+    - $import: TumourType.yaml
+    - class: ScatterFeatureRequirement
+    - class: StepInputExpressionRequirement
+    - class: MultipleInputFeatureRequirement
+    - class: InlineJavascriptRequirement
+      expressionLib:
+        - { $include: oxog_varbam_annotate_util.js }
+        # Shouldn't have to *explicitly* include these but there's
+        # probably a bug somewhere that makes it necessary
+        - { $include: preprocess_util.js }
+        - { $include: vcf_merge_util.js }
+    - class: SubworkflowFeatureRequirement
+
 inputs:
     inputFileDirectory:
       type: Directory
@@ -35,16 +49,7 @@ inputs:
     tumours:
       type:
         type: array
-        items:
-          type: record
-          fields:
-            tumourId:
-              type: string
-            bamFileName:
-              type: string
-            associatedVcfs:
-              type: string[]
-
+        items: "TumourType.yaml#TumourType"
 
 outputs:
     preprocessed_files_merged:
@@ -59,18 +64,6 @@ outputs:
 #       outputSource: run_variant_bam/minibam
 #     # oxogOutputs:outFiles
 
-requirements:
-    - class: ScatterFeatureRequirement
-    - class: StepInputExpressionRequirement
-    - class: MultipleInputFeatureRequirement
-    - class: InlineJavascriptRequirement
-      expressionLib:
-        - { $include: oxog_varbam_annotate_util.js }
-        # Shouldn't have to *explicitly* include these but there's
-        # probably a bug somewhere that makes it necessary
-        - { $include: preprocess_util.js }
-        - { $include: vcf_merge_util.js }
-    - class: SubworkflowFeatureRequirement
 
 steps:
     #preprocess the VCFs
@@ -131,7 +124,7 @@ steps:
     # This needs to be run for each tumour, using VCFs that are merged pipelines per tumour.
     run_variant_bam:
       run: Variantbam-for-dockstore/variantbam.cwl
-      scatter: [ input-bam ]
+      scatter: [input-bam]
       in:
         input-bam:
           source: tumours
@@ -142,9 +135,12 @@ steps:
         snv-padding: snv-padding
         sv-padding: sv-padding
         indel-padding: indel-padding
-        input-snv: filter_merged_snv/merged_snv_vcf
-        input-sv: filter_merged_sv/merged_sv_vcf
-        input-indel: filter_merged_indel/merged_indel_vcf
+        input-snv:
+          source: filter_merged_snv/merged_snv_vcf
+        input-sv:
+          source: filter_merged_sv/merged_sv_vcf
+        input-indel:
+          source: filter_merged_indel/merged_indel_vcf
       out: [minibam]
 
     # Do OxoG. Will also need some additional intermediate steps to sort out the
