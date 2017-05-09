@@ -44,6 +44,10 @@ inputs:
       type: string
     refDataDir:
       type: Directory
+    minibamName:
+      type: string
+    vcfdir:
+      type: Directory
     # "tumours" is an array of records. Each record contains the tumour ID, BAM
     # file name, and an array of VCFs.
     tumours:
@@ -123,25 +127,73 @@ steps:
     # Do variantbam
     # This needs to be run for each tumour, using VCFs that are merged pipelines per tumour.
     run_variant_bam:
-      run: Variantbam-for-dockstore/variantbam.cwl
-      scatter: [input-bam]
-      in:
-        input-bam:
-          source: tumours
-          valueFrom: $(self.bamFileName)
-        outfile:
-          source: tumours
-          valueFrom: $("mini-".concat(self.tumourId).concat(".bam"))
-        snv-padding: snv-padding
-        sv-padding: sv-padding
-        indel-padding: indel-padding
-        input-snv:
-          source: filter_merged_snv/merged_snv_vcf
-        input-sv:
-          source: filter_merged_sv/merged_sv_vcf
-        input-indel:
-          source: filter_merged_indel/merged_indel_vcf
-      out: [minibam]
+        in:
+            in_data:
+                source: tumours
+            indel-padding: indel-padding
+            snv-padding: indel-padding
+            sv-padding: indel-padding
+            input-snv: filter_merged_snv/merged_snv_vcf
+            input-sv: filter_merged_sv/merged_sv_vcf
+            input-indel: filter_merged_indel/merged_indel_vcf
+            inDir:
+                type: Directory
+                source: inputFileDirectory
+            input-bam:
+                default: ""
+            outfile:
+                default: ""
+        out: [minibam]
+        scatter: [in_data]
+        run:
+            class: Workflow
+            outputs:
+                minibam:
+                    type: File
+            inputs:
+                in_data:
+                    type: "TumourType.yaml#TumourType"
+                indel-padding:
+                    type: string
+                snv-padding:
+                    type: string
+                sv-padding:
+                    type: string
+                input-indel:
+                    type: File
+                input-snv:
+                    type: File
+                input-sv:
+                    type: File
+                input-bam:
+                    type: File
+                    valueFrom: $(inputs.inDir)
+#                    type: string
+#                    source: in_data
+#                    valueFrom: $((inputs.inDir).concat(inputs.in_data.bamFileName))
+                outfile:
+                    type: string
+#                    source: in_data
+                    valueFrom: $("mini-".concat(inputs.in_data.tumourId).concat(".bam"))
+            steps:
+                sub_run_var_bam:
+                    run: Variantbam-for-dockstore/variantbam.cwl
+                    in:
+                        input-bam: input-bam
+                        outfile: outfile
+                        snv-padding: snv-padding
+                        sv-padding: sv-padding
+                        indel-padding: indel-padding
+                            # valueFrom: $(inputs.indel-padding)
+                        input-snv: input-snv
+                        #   source: filter_merged_snv/merged_snv_vcf
+                        input-sv: input-sv
+                        #   source: filter_merged_sv/merged_sv_vcf
+                        input-indel: input-indel
+                        #   source: filter_merged_indel/merged_indel_vcf
+                    out: [minibam]
+
+
 
     # Do OxoG. Will also need some additional intermediate steps to sort out the
     # inputs and ensure that the  VCFs and BAM for the same tumour are run
