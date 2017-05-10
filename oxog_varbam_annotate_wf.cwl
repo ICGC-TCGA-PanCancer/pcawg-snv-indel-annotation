@@ -131,14 +131,12 @@ steps:
             in_data:
                 source: tumours
             indel-padding: indel-padding
-            snv-padding: indel-padding
-            sv-padding: indel-padding
+            snv-padding: snv-padding
+            sv-padding: sv-padding
             input-snv: filter_merged_snv/merged_snv_vcf
             input-sv: filter_merged_sv/merged_sv_vcf
             input-indel: filter_merged_indel/merged_indel_vcf
-            inDir:
-                type: Directory
-                source: inputFileDirectory
+            inputFileDirectory: inputFileDirectory
             input-bam:
                 default: ""
             outfile:
@@ -151,6 +149,8 @@ steps:
                 minibam:
                     type: File
             inputs:
+                inputFileDirectory:
+                    type: Directory
                 in_data:
                     type: "TumourType.yaml#TumourType"
                 indel-padding:
@@ -167,13 +167,15 @@ steps:
                     type: File
                 input-bam:
                     type: File
-                    valueFrom: $(inputs.inDir)
-#                    type: string
-#                    source: in_data
-#                    valueFrom: $((inputs.inDir).concat(inputs.in_data.bamFileName))
+                    valueFrom: |
+                        $(
+                            {
+                                "class":"File",
+                                "location": inputs.inputFileDirectory.location + "/" + inputs.in_data.bamFileName
+                            }
+                        )
                 outfile:
                     type: string
-#                    source: in_data
                     valueFrom: $("mini-".concat(inputs.in_data.tumourId).concat(".bam"))
             steps:
                 sub_run_var_bam:
@@ -184,13 +186,9 @@ steps:
                         snv-padding: snv-padding
                         sv-padding: sv-padding
                         indel-padding: indel-padding
-                            # valueFrom: $(inputs.indel-padding)
                         input-snv: input-snv
-                        #   source: filter_merged_snv/merged_snv_vcf
                         input-sv: input-sv
-                        #   source: filter_merged_sv/merged_sv_vcf
                         input-indel: input-indel
-                        #   source: filter_merged_indel/merged_indel_vcf
                     out: [minibam]
 
 
