@@ -12,6 +12,7 @@ dct:creator:
     foaf:mbox: "solomon.shorser@oicr.on.ca"
 
 requirements:
+    - $import: PreprocessedFilesType.yaml
     - $import: TumourType.yaml
     - class: ScatterFeatureRequirement
     - class: StepInputExpressionRequirement
@@ -58,7 +59,7 @@ inputs:
 outputs:
     preprocessed_files_merged:
         type: File[]
-        outputSource: preprocess_vcfs/mergedVCFs
+        outputSource: preprocess_vcfs/preprocessedFiles
     # blah:
     #   type: File[]
     #     outputSource: filter_merged_sv/merged_sv_vcf
@@ -77,51 +78,57 @@ steps:
         vcfdir: inputFileDirectory
         ref: refFile
         out_dir: out_dir
-      out: [mergedVCFs]
+      out: [preprocessedFiles]
 
     # The filter_merged_* steps may need to be rewritten to handle multi-tumour situations.
     #
     # Need some ExpressionTool steps to get the specific names of merged VCFs to
     # feed into variantbam.
     filter_merged_snv:
-      in:
-        in_vcfs: preprocess_vcfs/mergedVCFs
-      run:
-        class: ExpressionTool
-        inputs:
-          in_vcfs: File[]
-        outputs:
-          merged_snv_vcf: File
-        expression: |
-          $({ merged_snv_vcf: filterFileArray("snv",inputs.in_vcfs) })
-      out: [merged_snv_vcf]
+        in:
+            in_vcfs:
+                source: preprocess_vcfs/preprocessedFiles
+                valueFrom: self.mergedVcfs
+        run:
+            class: ExpressionTool
+            inputs:
+                in_vcfs: File[]
+            outputs:
+                merged_snv_vcf: File
+            expression: |
+                $({ merged_snv_vcf: filterFileArray("snv",inputs.in_vcfs) })
+        out: [merged_snv_vcf]
 
     filter_merged_indel:
-      in:
-        in_vcfs: preprocess_vcfs/mergedVCFs
-      run:
-        class: ExpressionTool
-        inputs:
-          in_vcfs: File[]
-        outputs:
-          merged_indel_vcf: File
-        expression: |
-          $({ merged_indel_vcf: filterFileArray("indel",inputs.in_vcfs) })
-      out: [merged_indel_vcf]
+        in:
+            in_vcfs:
+                source: preprocess_vcfs/preprocessedFiles
+                valueFrom: self.mergedVcfs
+        run:
+            class: ExpressionTool
+            inputs:
+                in_vcfs: File[]
+            outputs:
+                merged_indel_vcf: File
+            expression: |
+                $({ merged_indel_vcf: filterFileArray("indel",inputs.in_vcfs) })
+        out: [merged_indel_vcf]
 
 
     filter_merged_sv:
-      in:
-        in_vcfs: preprocess_vcfs/mergedVCFs
-      run:
-        class: ExpressionTool
-        inputs:
-          in_vcfs: File[]
-        outputs:
-          merged_sv_vcf: File
-        expression: |
-          $({ merged_sv_vcf: filterFileArray("sv",inputs.in_vcfs) })
-      out: [merged_sv_vcf]
+        in:
+            in_vcfs:
+                source: preprocess_vcfs/preprocessedFiles
+                valueFrom: self.mergedVcfs
+        run:
+            class: ExpressionTool
+            inputs:
+                in_vcfs: File[]
+            outputs:
+                merged_sv_vcf: File
+            expression: |
+                $({ merged_sv_vcf: filterFileArray("sv",inputs.in_vcfs) })
+        out: [merged_sv_vcf]
 
 
     # Do variantbam
@@ -216,6 +223,12 @@ steps:
                 default: ""
             tumourID:
                 default: ""
+            normalizedVcfs:
+                source: preprocess_vcfs/preprocessedFiles
+                valueFrom: normalizedVCFs
+            extractedSnvs:
+                source: preprocess_vcfs/preprocessedFiles
+                valueFrom: extractedSnvs
         out:
             [oxogVCF]
         scatter: [in_data]
@@ -226,8 +239,10 @@ steps:
                     outputSource: sub_run_oxog/oxogVCF
                     type: File
             inputs:
-                # normalizedVcfs: preprocess_vcfs/normalizedVCFs
-                # extractedSnvs: preprocess_vcfs/extractedSNVs
+                normalizedVcfs:
+                    type: File[]
+                extractedSnvs:
+                    type: File[]
                 inputFileDirectory:
                     type: Directory
                 in_data:
@@ -254,13 +269,19 @@ steps:
                             // that match the names of those in in_data.inputs.associatedVCFs
                             //
 
-                            for ( var associatedVcf in inputs.in_data.associatedVcfs )
+                            for ( var i in inputs.in_data.associatedVcfs )
                             {
-                                if ( inputs.in_data.associatedVcfs[associatedVcf].indexOf('.snv') > 0 )
+                                if ( inputs.in_data.associatedVcfs[i].indexOf('.snv') > 0 )
                                 {
+                                    for ( var j in inputs.normalizedVcfs )
+                                    {
+                                        if ( inputs.normalizedVcfs[j].indexOf( inputs.in_data.associatedVcfs[i].replace(".vcf.gz") ) >= 0 )
+                                        {
+                                            vcfsToUse.push( inputs.normalizedVcfs[j].path + inputs.normalizedVcfs[j].basename )
+                                        }
+                                    }
                                     // the normalized VCFs will end with ".normalized.vcf.gz" instead of ".vcf.gz"
-                                    if ( inputs.in_data.associatedVcfs[associatedVcf] )
-                                    vcfsToUse.push( inputs.in_data.associatedVcfs[associatedVcf].replace(".vcf.gz", ".normalized.vcf.gz") )
+                                    //if ( inputs.in_data.associatedVcfs[associatedVcf] )
                                 }
                             }
                             return vcfsToUse

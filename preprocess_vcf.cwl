@@ -10,6 +10,18 @@ dct:creator:
     foaf:name: "Solomon Shorser"
     foaf:mbox: "solomon.shorser@oicr.on.ca"
 
+requirements:
+    - $import: PreprocessedFilesType.yaml
+    - class: ScatterFeatureRequirement
+    - class: StepInputExpressionRequirement
+    - class: InlineJavascriptRequirement
+      expressionLib:
+        - { $include: ./preprocess_util.js }
+        # Shouldn't have to *explicitly* include vcf_merge_util.js but there's
+        # probably a bug somewhere that makes it necessary
+        - { $include: ./vcf_merge_util.js }
+    - class: SubworkflowFeatureRequirement
+
 inputs:
     - id: vcfdir
       type: Directory
@@ -23,27 +35,19 @@ inputs:
 # - The VCFs that are cleaned and normalized.
 # - The SNVs that were extracted from INDELs (if there were any - usually there are none).
 outputs:
-    mergedVCFs:
-      type: File[]
-      outputSource: merge_vcfs/output
-    normalizedVCFs:
-      type: File[]
-      outputSource: normalize/normalized-vcf
-    extractedSNVs:
-      type: File[]
-      outputSource: extract_snv/extracted_snvs
+    preprocessedFiles:
+        type: "PreprocessedFilesType.yaml#PreprocessedFileset"
+    # mergedVCFs:
+    #   type: File[]
+    #   outputSource: merge_vcfs/output
+    # normalizedVCFs:
+    #   type: File[]
+    #   outputSource: normalize/normalized-vcf
+    # extractedSNVs:
+    #   type: File[]
+    #   outputSource: extract_snv/extracted_snvs
 
 
-requirements:
-    - class: ScatterFeatureRequirement
-    - class: StepInputExpressionRequirement
-    - class: InlineJavascriptRequirement
-      expressionLib:
-        - { $include: ./preprocess_util.js }
-        # Shouldn't have to *explicitly* include vcf_merge_util.js but there's
-        # probably a bug somewhere that makes it necessary
-        - { $include: ./vcf_merge_util.js }
-    - class: SubworkflowFeatureRequirement
 
 steps:
     pass_filter:
