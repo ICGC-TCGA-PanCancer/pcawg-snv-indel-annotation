@@ -197,22 +197,90 @@ steps:
     # Do OxoG. Will also need some additional intermediate steps to sort out the
     # inputs and ensure that the  VCFs and BAM for the same tumour are run
     # together. OxoG only runs on SNV VCFs
-    # run_oxog:
-    #   run: oxog.cwl
-    #   scatter: run_oxog/tumours
-    #   in:
-    #       # Scatter by tumour ID
-    #       tumour: $(inputs.tumours)
-    #       # Need to get the name of the tumour file that matches tumourID
-    #       tumourBamFilename: $(self.tumourBam)
-    #       tumourBamIndexFilename: $(self.tumourBamIndex)
-    #       normalBam: $(inputs.normalBam)
-    #       inputFileDirectory: $(inputs.inputFileDirectory)
-    #       refDataDir: $(inputs.refDataDir)
-    #       oxoQScore: $(inputs.oxoQScore)
-    #       # Need to get VCFs for this tumour. Need an array made of the outputs of earlier VCF pre-processing steps, filtered by tumourID
-    #       vcfNames: $(getVCFsForTumour(tumourID, filter_merged_snv, filter_merged_sv, filter_merged_indel))
+    run_oxog:
+        run: oxog.cwl
+        scatter: run_oxog/tumours
+        in:
+            in_data:
+                source: tumours
+            inputFileDirectory: inputFileDirectory
+            tumourBamFilename:
+                default: ""
+            tumourBamIndexFilename:
+                default: ""
+            # normalBam: normalBam
+            refDataDir: refDataDir
+            oxoQScore: oxoQScore
+            # Need to get VCFs for this tumour. Need an array made of the outputs of earlier VCF pre-processing steps, filtered by tumourID
+            vcfNames:
+                default: ""
+            tumourID:
+                default: ""
+        out:
+            [oxogVCF]
+        scatter: [in_data]
+        run:
+            class: Workflow
+            outputs:
+                oxogVCF:
+                    outputSource: sub_run_oxog/oxogVCF
+                    type: File
+            inputs:
+                # normalizedVcfs: preprocess_vcfs/normalizedVCFs
+                # extractedSnvs: preprocess_vcfs/extractedSNVs
+                inputFileDirectory:
+                    type: Directory
+                in_data:
+                    type: "TumourType.yaml#TumourType"
+                tumourBamFilename:
+                    type: string
+                    valueFrom: $( inputs.in_data.bamFileName )
+                tumourBamIndexFilename:
+                    type: string
+                    valueFrom: $(inputs.in_data.tumourId + ".bai")
+                # normalBam:
+                #     type: string
+                refDataDir:
+                    type: Directory
+                oxoQScore:
+                    type: string
+                # Need to get VCFs for this tumour. Need an array made of the outputs of earlier VCF pre-processing steps, filtered by tumourID
+                vcfNames:
+                    type: string[]
+                    valueFrom: |
+                        ${
+                            var vcfsToUse = []
+                            // Need to search through preprocess_vcfs/normalizedVCFs and preprocess_vcfs/extractedSNVs to find VCFs
+                            // that match the names of those in in_data.inputs.associatedVCFs
+                            //
 
+                            for ( var associatedVcf in inputs.in_data.associatedVcfs )
+                            {
+                                if ( inputs.in_data.associatedVcfs[associatedVcf].indexOf('.snv') > 0 )
+                                {
+                                    // the normalized VCFs will end with ".normalized.vcf.gz" instead of ".vcf.gz"
+                                    if ( inputs.in_data.associatedVcfs[associatedVcf] )
+                                    vcfsToUse.push( inputs.in_data.associatedVcfs[associatedVcf].replace(".vcf.gz", ".normalized.vcf.gz") )
+                                }
+                            }
+                            return vcfsToUse
+                        }
+                tumourID:
+                    valueFrom: $(inputs.in_data.tumourId)
+                    type: string
+            steps:
+                sub_run_oxog:
+                    run: oxog.cwl
+                    in:
+                        inputFileDirectory: inputFileDirectory
+                        tumourBamFilename: tumourBamFilename
+                        tumourBamIndexFilename: tumourBamIndexFilename
+#                        normalBam: normalBam
+                        refDataDir: refDataDir
+                        oxoQScore: oxoQScore
+                        vcfNames: vcfNames
+                        tumourID: tumourID
+                    out: [oxogVCF]
     # Do Annotation. This will probably need some intermediate steps...
 
     # Do consensus-calling.
