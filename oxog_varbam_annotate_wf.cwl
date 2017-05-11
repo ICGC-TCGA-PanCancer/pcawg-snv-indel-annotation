@@ -147,6 +147,7 @@ steps:
             class: Workflow
             outputs:
                 minibam:
+                    outputSource: sub_run_var_bam/minibam
                     type: File
             inputs:
                 inputFileDirectory:
