@@ -51,25 +51,24 @@ inputs:
           position: 1
           prefix: --pairID
     - id: tumourBamFilename
-      type: string
+      type: File
       inputBinding:
           position: 2
           prefix: --bamName
-    - id: tumourBamIndexFilename
-      type: string
-      inputBinding:
-          position: 3
-          prefix: --baiName
+          secondaryFiles: .bai
     - id: oxoQScore
       type: string
       inputBinding:
           position: 4
           prefix: --oxoqScore
     - id: vcfNames
-      type: string[]
+      type: File[]
       inputBinding:
           position: 5
           prefix: --vcfs
+          secondaryFiles:
+              - .tbi
+              - .idx
     - id: refDataDir
       type: Directory
       inputBinding:
