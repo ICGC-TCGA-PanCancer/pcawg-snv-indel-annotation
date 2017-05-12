@@ -15,3 +15,15 @@ types:
         type: string[]
         inputBinding:
             position: 2
+
+  - name: PreprocessedFileset
+    type: record
+    fields:
+        - name: mergedVcfs
+          type: File[]
+        - name: normalizedVcfs
+          type: File[]
+        - name: extractedSnvs
+          type: File[]
+        - name: cleanedVcfs
+          type: File[]
