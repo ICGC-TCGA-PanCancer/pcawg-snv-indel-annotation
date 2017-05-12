@@ -12,8 +12,8 @@ dct:creator:
     foaf:mbox: "solomon.shorser@oicr.on.ca"
 
 requirements:
-    - $import: PreprocessedFilesType.yaml
     - $import: TumourType.yaml
+#    - $import: PreprocessedFilesType.yaml
     - class: ScatterFeatureRequirement
     - class: StepInputExpressionRequirement
     - class: MultipleInputFeatureRequirement
@@ -57,9 +57,21 @@ inputs:
         items: "TumourType.yaml#TumourType"
 
 outputs:
-    preprocessed_files_merged:
+    # preprocessed_files_merged:
+    #     type: File[]
+    #     outputSource: preprocess_vcfs/preprocessedFiles
+    #     valueFrom: mergedVcfs
+    # preprocessed_files_normalized:
+    #     type: File[]
+    #     outputSource: preprocess_vcfs/preprocessedFiles
+    #     valueFrom: normalizedVcfs
+    # preprocessed_files_extracted_snvs:
+    #     type: File[]
+    #     outputSource: preprocess_vcfs/preprocessedFiles
+    #     valueFrom: extractedSnvs
+    minibams:
         type: File[]
-        outputSource: preprocess_vcfs/preprocessedFiles
+        outputSource: run_variant_bam/minibam
     # blah:
     #   type: File[]
     #     outputSource: filter_merged_sv/merged_sv_vcf
@@ -80,15 +92,51 @@ steps:
         out_dir: out_dir
       out: [preprocessedFiles]
 
+    get_merged_vcfs:
+        in:
+            in_record: preprocess_vcfs/preprocessedFiles
+        run:
+            class: ExpressionTool
+            inputs:
+                in_record: "TumourType.yaml#PreprocessedFileset"
+            outputs:
+                merged_vcfs: File[]
+            expression: |
+                $( { merged_vcfs:  inputs.in_record.mergedVcfs } )
+        out: [merged_vcfs]
+
+    get_cleaned_vcfs:
+        in:
+            in_record: preprocess_vcfs/preprocessedFiles
+        run:
+            class: ExpressionTool
+            inputs:
+                in_record: "TumourType.yaml#PreprocessedFileset"
+            outputs:
+                cleaned_vcfs: File[]
+            expression: |
+                $( { cleaned_vcfs:  inputs.in_record.cleanedVcfs } )
+        out: [cleaned_vcfs]
+
+    get_extracted_snvs:
+        in:
+            in_record: preprocess_vcfs/preprocessedFiles
+        run:
+            class: ExpressionTool
+            inputs:
+                in_record: "TumourType.yaml#PreprocessedFileset"
+            outputs:
+                extracted_snvs: File[]
+            expression: |
+                $( { extracted_snvs:  inputs.in_record.extractedSnvs } )
+        out: [extracted_snvs]
     # The filter_merged_* steps may need to be rewritten to handle multi-tumour situations.
     #
     # Need some ExpressionTool steps to get the specific names of merged VCFs to
     # feed into variantbam.
     filter_merged_snv:
         in:
-            in_vcfs:
-                source: preprocess_vcfs/preprocessedFiles
-                valueFrom: self.mergedVcfs
+            in_vcfs: get_merged_vcfs/merged_vcfs
         run:
             class: ExpressionTool
             inputs:
@@ -101,9 +149,7 @@ steps:
 
     filter_merged_indel:
         in:
-            in_vcfs:
-                source: preprocess_vcfs/preprocessedFiles
-                valueFrom: self.mergedVcfs
+            in_vcfs: get_merged_vcfs/merged_vcfs
         run:
             class: ExpressionTool
             inputs:
@@ -117,9 +163,7 @@ steps:
 
     filter_merged_sv:
         in:
-            in_vcfs:
-                source: preprocess_vcfs/preprocessedFiles
-                valueFrom: self.mergedVcfs
+            in_vcfs: get_merged_vcfs/merged_vcfs
         run:
             class: ExpressionTool
             inputs:
@@ -223,12 +267,8 @@ steps:
                 default: ""
             tumourID:
                 default: ""
-            normalizedVcfs:
-                source: preprocess_vcfs/preprocessedFiles
-                valueFrom: normalizedVCFs
-            extractedSnvs:
-                source: preprocess_vcfs/preprocessedFiles
-                valueFrom: extractedSnvs
+            cleanedVcfs: get_cleaned_vcfs/cleaned_vcfs
+            extractedSnvs: get_extracted_snvs/extracted_snvs
         out:
             [oxogVCF]
         scatter: [in_data]
@@ -239,7 +279,7 @@ steps:
                     outputSource: sub_run_oxog/oxogVCF
                     type: File
             inputs:
-                normalizedVcfs:
+                cleanedVcfs:
                     type: File[]
                 extractedSnvs:
                     type: File[]
@@ -265,23 +305,24 @@ steps:
                     valueFrom: |
                         ${
                             var vcfsToUse = []
-                            // Need to search through preprocess_vcfs/normalizedVCFs and preprocess_vcfs/extractedSNVs to find VCFs
+                            // Need to search through preprocess_vcfs/cleanedVCFs and preprocess_vcfs/extractedSNVs to find VCFs
                             // that match the names of those in in_data.inputs.associatedVCFs
                             //
-
-                            for ( var i in inputs.in_data.associatedVcfs )
+                            var associatedVcfs = inputs.in_data.associatedVcfs
+                            for ( var i in associatedVcfs )
                             {
-                                if ( inputs.in_data.associatedVcfs[i].indexOf('.snv') > 0 )
+                                if ( associatedVcfs[i].indexOf(".snv") !== -1 )
                                 {
-                                    for ( var j in inputs.normalizedVcfs )
+                                    //vcfsToUse.push( associatedVcfs[i] )
+                                    for ( var j in inputs.cleanedVcfs )
                                     {
-                                        if ( inputs.normalizedVcfs[j].indexOf( inputs.in_data.associatedVcfs[i].replace(".vcf.gz") ) >= 0 )
+                                        if ( inputs.cleanedVcfs[j].basename.indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 )
                                         {
-                                            vcfsToUse.push( inputs.normalizedVcfs[j].path + inputs.normalizedVcfs[j].basename )
+                                            vcfsToUse.push(  inputs.cleanedVcfs[j].basename )
                                         }
                                     }
                                     // the normalized VCFs will end with ".normalized.vcf.gz" instead of ".vcf.gz"
-                                    //if ( inputs.in_data.associatedVcfs[associatedVcf] )
+                                    //if ( associatedVcfs[associatedVcf] )
                                 }
                             }
                             return vcfsToUse
@@ -290,6 +331,21 @@ steps:
                     valueFrom: $(inputs.in_data.tumourId)
                     type: string
             steps:
+                # Need a step to move things from the preprocess_vcfs output dir into inputFileDirectory
+                # move_vcfs:
+                #     scatter: [vcfNames]
+                #     in:
+                #         vcfNames: vcfNames
+                #     run:
+                #         class: CommandLineTool
+                #         inputs:
+                #             vcfName:
+                #                 type: string
+                #
+                #         outputs:
+                #         basecommand: mv
+
+
                 sub_run_oxog:
                     run: oxog.cwl
                     in:

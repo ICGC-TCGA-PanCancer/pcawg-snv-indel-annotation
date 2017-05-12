@@ -11,7 +11,7 @@ dct:creator:
     foaf:mbox: "solomon.shorser@oicr.on.ca"
 
 requirements:
-    - $import: PreprocessedFilesType.yaml
+    - $import: TumourType.yaml
     - class: ScatterFeatureRequirement
     - class: StepInputExpressionRequirement
     - class: InlineJavascriptRequirement
@@ -36,7 +36,9 @@ inputs:
 # - The SNVs that were extracted from INDELs (if there were any - usually there are none).
 outputs:
     preprocessedFiles:
-        type: "PreprocessedFilesType.yaml#PreprocessedFileset"
+        type: "TumourType.yaml#PreprocessedFileset"
+        outputSource: populate_output_record/output_record
+
     # mergedVCFs:
     #   type: File[]
     #   outputSource: merge_vcfs/output
@@ -298,3 +300,30 @@ steps:
         out_dir: out_dir
       out:
           [output]
+
+
+    populate_output_record:
+        in:
+            mergedVcfs : merge_vcfs/output
+            extractedSnvs : extract_snv/extracted_snvs
+            normalizedVcfs: normalize/normalized-vcf
+            cleanedVcfs: clean/clean_vcf
+        out:
+            [output_record]
+        run:
+            class: ExpressionTool
+            inputs:
+                mergedVcfs: File[]
+                extractedSnvs: File[]
+                normalizedVcfs: File[]
+            outputs:
+              output_record: "TumourType.yaml#PreprocessedFileset"
+            expression: |
+                    $(
+                        {output_record: {
+                            "mergedVcfs": inputs.mergedVcfs,
+                            "extractedSnvs": inputs.extractedSnvs,
+                            "normalizedVcfs": inputs.normalizedVcfs,
+                            "cleanedVcfs": inputs.cleanedVcfs
+                        }}
+                    )
