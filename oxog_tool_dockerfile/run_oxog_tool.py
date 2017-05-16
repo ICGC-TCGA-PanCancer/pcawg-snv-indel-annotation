@@ -17,7 +17,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--inputDir')
 parser.add_argument('--pairID')
 parser.add_argument('--bamName')
-# parser.add_argument('--baiName')
 parser.add_argument('--oxoqScore')
 parser.add_argument('--refDataDir')
 parser.add_argument('--vcfs', nargs='+')
@@ -28,13 +27,13 @@ argvars = vars(args)
 inputDir = argvars['inputDir']
 
 pairID = argvars['pairID']
-bam_tumor = inputDir + '/' + argvars['bamName']
-#bam_tumor_index = inputDir + '/' + argvars['baiName']
+bam_tumor = argvars['bamName']
 oxoq = argvars['oxoqScore']
 
-vcfs = argvars['vcfs']
-# for vcf in argvars['vcfs']:
-#     vcfs += vcf #(' ' + inputDir + '/' + vcf )
+vcfsArgs = argvars['vcfs']
+vcfs = ''
+for vcf in argvars['vcfs']:
+    vcfs += vcf + ' '
 
 refdata1=argvars['refDataDir']
 
