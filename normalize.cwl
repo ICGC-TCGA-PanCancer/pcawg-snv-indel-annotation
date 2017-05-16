@@ -4,7 +4,7 @@ class: CommandLineTool
 id: "normalize"
 label: "normalize"
 
-description: |
+doc: |
     This tool will normalize an INDEL VCF using bcf-tools norm.
 
 dct:creator:

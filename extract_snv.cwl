@@ -4,7 +4,7 @@ class: CommandLineTool
 id: "extract_snvs"
 label: "extract_snvs"
 
-description: |
+doc: |
     This tool will extract SNVs from INDEL VCFs
 
 dct:creator:

@@ -4,7 +4,7 @@ class: CommandLineTool
 id: "pass-filter"
 label: "pass-filter"
 
-description: |
+doc: |
     This tool will pass-filter a VCF.
 
 dct:creator:
