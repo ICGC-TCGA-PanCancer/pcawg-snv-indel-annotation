@@ -3,7 +3,7 @@
 cwlVersion: v1.0
 class: Workflow
 
-description: |
+doc: |
     This workflow will perform preprocessing steps on VCFs for the OxoG/Variantbam/Annotation workflow.
 
 dct:creator:
@@ -11,7 +11,9 @@ dct:creator:
     foaf:mbox: "solomon.shorser@oicr.on.ca"
 
 requirements:
-    - $import: TumourType.yaml
+    - class: SchemaDefRequirement
+      types:
+          - $import: PreprocessedFilesType.yaml
     - class: ScatterFeatureRequirement
     - class: StepInputExpressionRequirement
     - class: InlineJavascriptRequirement
@@ -36,7 +38,7 @@ inputs:
 # - The SNVs that were extracted from INDELs (if there were any - usually there are none).
 outputs:
     preprocessedFiles:
-        type: "TumourType.yaml#PreprocessedFileset"
+        type: "PreprocessedFilesType.yaml#PreprocessedFileset"
         outputSource: populate_output_record/output_record
 
     # mergedVCFs:
@@ -317,13 +319,13 @@ steps:
                 extractedSnvs: File[]
                 normalizedVcfs: File[]
             outputs:
-              output_record: "TumourType.yaml#PreprocessedFileset"
+              output_record: "PreprocessedFilesType.yaml#PreprocessedFileset"
             expression: |
                     $(
                         {output_record: {
+                            "cleanedVcfs": inputs.cleanedVcfs,
                             "mergedVcfs": inputs.mergedVcfs,
                             "extractedSnvs": inputs.extractedSnvs,
-                            "normalizedVcfs": inputs.normalizedVcfs,
-                            "cleanedVcfs": inputs.cleanedVcfs
+                            "normalizedVcfs": inputs.normalizedVcfs
                         }}
                     )

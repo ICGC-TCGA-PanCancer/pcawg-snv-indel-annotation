@@ -1,29 +1,15 @@
-class: SchemaDefRequirement
-types:
-  - name: TumourType
-    type: record
-    fields:
-      - name: tumourId
-        type: string
-        inputBinding:
-            position: 0
-      - name: bamFileName
-        type: string
-        inputBinding:
-            position: 1
-      - name: associatedVcfs
-        type: string[]
-        inputBinding:
-            position: 2
-
-  - name: PreprocessedFileset
-    type: record
-    fields:
-        - name: mergedVcfs
-          type: File[]
-        - name: normalizedVcfs
-          type: File[]
-        - name: extractedSnvs
-          type: File[]
-        - name: cleanedVcfs
-          type: File[]
+name: TumourType
+type: record
+fields:
+  - name: tumourId
+    type: string
+    inputBinding:
+        position: 0
+  - name: bamFileName
+    type: string
+    inputBinding:
+        position: 1
+  - name: associatedVcfs
+    type: string[]
+    inputBinding:
+        position: 2

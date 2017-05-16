@@ -3,7 +3,7 @@
 cwlVersion: v1.0
 class: Workflow
 
-description: |
+doc: |
     This workflow will run OxoG, variantbam, and annotate.
     Run this as: `dockstore --script --debug workflow launch --descriptor cwl --local-entry --entry ./oxog_varbam_annotate_wf.cwl --json oxog_varbam_annotat_wf.input.json `
 
@@ -12,8 +12,10 @@ dct:creator:
     foaf:mbox: "solomon.shorser@oicr.on.ca"
 
 requirements:
-    - $import: TumourType.yaml
-#    - $import: PreprocessedFilesType.yaml
+    - class: SchemaDefRequirement
+      types:
+          - $import: PreprocessedFilesType.yaml
+          - $import: TumourType.yaml
     - class: ScatterFeatureRequirement
     - class: StepInputExpressionRequirement
     - class: MultipleInputFeatureRequirement
@@ -57,10 +59,16 @@ inputs:
         items: "TumourType.yaml#TumourType"
 
 outputs:
-    # preprocessed_files_merged:
-    #     type: File[]
-    #     outputSource: preprocess_vcfs/preprocessedFiles
-    #     valueFrom: mergedVcfs
+    preprocessed_files_merged:
+        type: File[]
+        outputSource: preprocess_vcfs/preprocessedFiles
+        valueFrom: mergedVcfs
+    files_for_oxog:
+        type: File[]
+        outputSource: zip_and_index_files_for_oxog/zipped_file
+    oxog_filtered_files:
+        type: File[]
+        outputSource: run_oxog/oxogVCF
     # preprocessed_files_normalized:
     #     type: File[]
     #     outputSource: preprocess_vcfs/preprocessedFiles
@@ -98,7 +106,7 @@ steps:
         run:
             class: ExpressionTool
             inputs:
-                in_record: "TumourType.yaml#PreprocessedFileset"
+                in_record: "PreprocessedFilesType.yaml#PreprocessedFileset"
             outputs:
                 merged_vcfs: File[]
             expression: |
@@ -111,7 +119,7 @@ steps:
         run:
             class: ExpressionTool
             inputs:
-                in_record: "TumourType.yaml#PreprocessedFileset"
+                in_record: "PreprocessedFilesType.yaml#PreprocessedFileset"
             outputs:
                 cleaned_vcfs: File[]
             expression: |
@@ -124,7 +132,7 @@ steps:
         run:
             class: ExpressionTool
             inputs:
-                in_record: "TumourType.yaml#PreprocessedFileset"
+                in_record: "PreprocessedFilesType.yaml#PreprocessedFileset"
             outputs:
                 extracted_snvs: File[]
             expression: |
@@ -134,6 +142,7 @@ steps:
     #
     # Need some ExpressionTool steps to get the specific names of merged VCFs to
     # feed into variantbam.
+
     filter_merged_snv:
         in:
             in_vcfs: get_merged_vcfs/merged_vcfs
@@ -244,30 +253,33 @@ steps:
                     out: [minibam]
 
 
+    zip_and_index_files_for_oxog:
+        in:
+            vcf:
+                source: get_cleaned_vcfs/cleaned_vcfs
+                type: File[]
+        scatter: [vcf]
+        out: [zipped_file]
+        run: zip_and_index_vcf.cwl
 
     # Do OxoG. Will also need some additional intermediate steps to sort out the
     # inputs and ensure that the  VCFs and BAM for the same tumour are run
     # together. OxoG only runs on SNV VCFs
     run_oxog:
-        run: oxog.cwl
-        scatter: run_oxog/tumours
         in:
             in_data:
                 source: tumours
             inputFileDirectory: inputFileDirectory
             tumourBamFilename:
                 default: ""
-            tumourBamIndexFilename:
-                default: ""
-            # normalBam: normalBam
             refDataDir: refDataDir
             oxoQScore: oxoQScore
             # Need to get VCFs for this tumour. Need an array made of the outputs of earlier VCF pre-processing steps, filtered by tumourID
             vcfNames:
-                default: ""
+                default: []
             tumourID:
                 default: ""
-            cleanedVcfs: get_cleaned_vcfs/cleaned_vcfs
+            vcfsForOxoG: zip_and_index_files_for_oxog/zipped_file
             extractedSnvs: get_extracted_snvs/extracted_snvs
         out:
             [oxogVCF]
@@ -277,9 +289,9 @@ steps:
             outputs:
                 oxogVCF:
                     outputSource: sub_run_oxog/oxogVCF
-                    type: File
+                    type: File[]
             inputs:
-                cleanedVcfs:
+                vcfsForOxoG:
                     type: File[]
                 extractedSnvs:
                     type: File[]
@@ -288,24 +300,25 @@ steps:
                 in_data:
                     type: "TumourType.yaml#TumourType"
                 tumourBamFilename:
-                    type: string
-                    valueFrom: $( inputs.in_data.bamFileName )
-                tumourBamIndexFilename:
-                    type: string
-                    valueFrom: $(inputs.in_data.tumourId + ".bai")
-                # normalBam:
-                #     type: string
+                    type: File
+                    valueFrom: |
+                        $(
+                            {
+                                "class":"File",
+                                "location": inputs.inputFileDirectory.location + "/" + inputs.in_data.bamFileName
+                            }
+                        )
                 refDataDir:
                     type: Directory
                 oxoQScore:
                     type: string
                 # Need to get VCFs for this tumour. Need an array made of the outputs of earlier VCF pre-processing steps, filtered by tumourID
                 vcfNames:
-                    type: string[]
+                    type: File[]
                     valueFrom: |
                         ${
                             var vcfsToUse = []
-                            // Need to search through preprocess_vcfs/cleanedVCFs and preprocess_vcfs/extractedSNVs to find VCFs
+                            // Need to search through vcfsForOxoG (cleaned VCFs that have been zipped and index) and preprocess_vcfs/extractedSNVs to find VCFs
                             // that match the names of those in in_data.inputs.associatedVCFs
                             //
                             var associatedVcfs = inputs.in_data.associatedVcfs
@@ -313,16 +326,13 @@ steps:
                             {
                                 if ( associatedVcfs[i].indexOf(".snv") !== -1 )
                                 {
-                                    //vcfsToUse.push( associatedVcfs[i] )
-                                    for ( var j in inputs.cleanedVcfs )
+                                    for ( var j in inputs.vcfsForOxoG )
                                     {
-                                        if ( inputs.cleanedVcfs[j].basename.indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 )
+                                        if ( inputs.vcfsForOxoG[j].basename.indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 && /.*\.gz$/.test(inputs.vcfsForOxoG[j].basename))
                                         {
-                                            vcfsToUse.push(  inputs.cleanedVcfs[j].basename )
+                                            vcfsToUse.push (  inputs.vcfsForOxoG[j]    )
                                         }
                                     }
-                                    // the normalized VCFs will end with ".normalized.vcf.gz" instead of ".vcf.gz"
-                                    //if ( associatedVcfs[associatedVcf] )
                                 }
                             }
                             return vcfsToUse
@@ -331,28 +341,11 @@ steps:
                     valueFrom: $(inputs.in_data.tumourId)
                     type: string
             steps:
-                # Need a step to move things from the preprocess_vcfs output dir into inputFileDirectory
-                # move_vcfs:
-                #     scatter: [vcfNames]
-                #     in:
-                #         vcfNames: vcfNames
-                #     run:
-                #         class: CommandLineTool
-                #         inputs:
-                #             vcfName:
-                #                 type: string
-                #
-                #         outputs:
-                #         basecommand: mv
-
-
                 sub_run_oxog:
                     run: oxog.cwl
                     in:
                         inputFileDirectory: inputFileDirectory
                         tumourBamFilename: tumourBamFilename
-                        tumourBamIndexFilename: tumourBamIndexFilename
-#                        normalBam: normalBam
                         refDataDir: refDataDir
                         oxoQScore: oxoQScore
                         vcfNames: vcfNames
