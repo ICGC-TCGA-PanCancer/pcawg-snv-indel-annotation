@@ -119,7 +119,15 @@ sub sort_and_index {
 
 sub process_file {
   my ($file, $OUT) = @_;
-  open(IN, "zcat $file |") or die;
+  # Input files might not be zipped...
+  if ($file =~ m/.*gz/ )
+  {
+    open(IN, "zcat $file |") or die;
+  }
+  else
+  {
+    open(IN, "cat $file |") or die;
+  }
   while(<IN>) {
     chomp;
     next if (/^#/);
