@@ -59,16 +59,16 @@ inputs:
         items: "TumourType.yaml#TumourType"
 
 outputs:
-    preprocessed_files_merged:
-        type: File[]
-        outputSource: preprocess_vcfs/preprocessedFiles
-        valueFrom: mergedVcfs
-    files_for_oxog:
-        type: File[]
-        outputSource: zip_and_index_files_for_oxog/zipped_file
+    # preprocessed_files_merged:
+    #     type: File[]
+    #     outputSource: preprocess_vcfs/preprocessedFiles
+    #     valueFrom: mergedVcfs
+    # files_for_oxog:
+    #     type: File[]
+    #     outputSource: zip_and_index_files_for_oxog/zipped_file
     oxog_filtered_files:
         type: File[]
-        outputSource: run_oxog/oxogVCF
+        outputSource: flatten_oxog_output/oxogVCFs
     # preprocessed_files_normalized:
     #     type: File[]
     #     outputSource: preprocess_vcfs/preprocessedFiles
@@ -281,8 +281,7 @@ steps:
                 default: ""
             vcfsForOxoG: zip_and_index_files_for_oxog/zipped_file
             extractedSnvs: get_extracted_snvs/extracted_snvs
-        out:
-            [oxogVCF]
+        out: [oxogVCF]
         scatter: [in_data]
         run:
             class: Workflow
@@ -351,6 +350,32 @@ steps:
                         vcfNames: vcfNames
                         tumourID: tumourID
                     out: [oxogVCF]
+
+    flatten_oxog_output:
+        in:
+            array_of_arrays: run_oxog/oxogVCF
+        run:
+            class: ExpressionTool
+            inputs:
+                array_of_arrays:
+                    type: { type: array, items: { type: array, items: File } }
+            expression: |
+                ${
+                    var flattened_array = []
+                    for (i in array_of_arrays)
+                    {
+                        for (j in array_of_arrays[i])
+                        {
+                            flattened_array.push( array_of_arrays[j])
+                        }
+                    }
+                    return flattened_array
+                }
+            outputs:
+                oxogVCFs: File[]
+        out:
+            [oxogVCFs]
+
     # Do Annotation. This will probably need some intermediate steps...
 
     # Do consensus-calling.
