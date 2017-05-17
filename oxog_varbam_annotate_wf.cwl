@@ -63,31 +63,15 @@ outputs:
     #     type: File[]
     #     outputSource: preprocess_vcfs/preprocessedFiles
     #     valueFrom: mergedVcfs
-    # files_for_oxog:
-    #     type: File[]
-    #     outputSource: zip_and_index_files_for_oxog/zipped_file
     oxog_filtered_files:
         type: File[]
         outputSource: flatten_oxog_output/oxogVCFs
-    # preprocessed_files_normalized:
-    #     type: File[]
-    #     outputSource: preprocess_vcfs/preprocessedFiles
-    #     valueFrom: normalizedVcfs
-    # preprocessed_files_extracted_snvs:
-    #     type: File[]
-    #     outputSource: preprocess_vcfs/preprocessedFiles
-    #     valueFrom: extractedSnvs
     minibams:
         type: File[]
-        outputSource: run_variant_bam/minibam
+        outputSource: gather_minibams/minibams
     # blah:
     #   type: File[]
     #     outputSource: filter_merged_sv/merged_sv_vcf
-#     miniBams:
-#       type: File[]
-# #      outputSource: normalize/normalized-vcfminibamName
-#       outputSource: run_variant_bam/minibam
-#     # oxogOutputs:outFiles
 
 
 steps:
@@ -183,6 +167,24 @@ steps:
                 $({ merged_sv_vcf: filterFileArray("sv",inputs.in_vcfs) })
         out: [merged_sv_vcf]
 
+    # Create minibam for normal BAM. It would be nice to figure out how to get this into
+    # the main run_variant_bam step that currently only does tumour BAMs.
+    run_variant_bam_normal:
+        in:
+            indel-padding: indel-padding
+            snv-padding: snv-padding
+            sv-padding: sv-padding
+            input-snv: filter_merged_snv/merged_snv_vcf
+            input-sv: filter_merged_sv/merged_sv_vcf
+            input-indel: filter_merged_indel/merged_indel_vcf
+            inputFileDirectory: inputFileDirectory
+            input-bam: normalBam
+            outfile:
+                type: string
+                valueFrom: $("mini-".normalBam.basename)
+        run: Variantbam-for-dockstore/variantbam.cwl
+        out: [minibam]
+
 
     # Do variantbam
     # This needs to be run for each tumour, using VCFs that are merged pipelines per tumour.
@@ -252,6 +254,21 @@ steps:
                         input-indel: input-indel
                     out: [minibam]
 
+    # Gather all minibams into a single output array.
+    gather_minibams:
+        in:
+            tumour_minibams: run_variant_bam/minibam
+            normal_minibam: run_variant_bam_normal/minibam
+        run:
+            class: ExpressionTool
+            inputs:
+                tumour_minibams: File[]
+                normal_minibam: File
+            outputs:
+                minibams: File[]
+            expression: |
+                $( { minibams: inputs.tumour_minibams.push.apply(inputs.normal_minibam) } )
+        out: [minibams]
 
     zip_and_index_files_for_oxog:
         in:
@@ -316,6 +333,7 @@ steps:
                     type: File[]
                     valueFrom: |
                         ${
+                            //TODO: Move this function to separate JS file.
                             var vcfsToUse = []
                             // Need to search through vcfsForOxoG (cleaned VCFs that have been zipped and index) and preprocess_vcfs/extractedSNVs to find VCFs
                             // that match the names of those in in_data.inputs.associatedVCFs
@@ -361,12 +379,13 @@ steps:
                     type: { type: array, items: { type: array, items: File } }
             expression: |
                 ${
+                    //TODO: Move this function to separate JS file.
                     var flattened_array = []
-                    for (i in array_of_arrays)
+                    for (i in inputs.array_of_arrays)
                     {
-                        for (j in array_of_arrays[i])
+                        for (j in inputs.array_of_arrays[i])
                         {
-                            flattened_array.push( array_of_arrays[j])
+                            flattened_array.push( inputs.array_of_arrays[j])
                         }
                     }
                     return flattened_array
@@ -377,5 +396,24 @@ steps:
             [oxogVCFs]
 
     # Do Annotation. This will probably need some intermediate steps...
+    # we need OxoG filtered files, and minibams (tumour and normal).
+    # Then we need to scatter. We can scatter on minibams, and perform all annotations
+    # for each minibam at a time.
+    # run_annotator:
+    #     in:
+    #         minibams: gather_minibams/minibams
+    #         oxogVCFs: flatten_oxog_output/oxogVCFs
+    #         tumours_list:
+    #             source: tumours
+    #         scatter: [minibams]
+    #         run:
+    #             class: Workflow
+    #             inputs:
+    #             outputs:
+    #             steps:
+    #                 annotate:
+    #                     in:
+    #                     out:
+    #                     run: sga-annotate-docker/Dockstore.cwl
 
     # Do consensus-calling.
