@@ -343,11 +343,22 @@ steps:
                             {
                                 if ( associatedVcfs[i].indexOf(".snv") !== -1 )
                                 {
+                                    // Loop through the VCFs that have been prepped for OxoG - check that they should be
+                                    // added to vcfsToUse - if their filename is in the current tumour's list of associated VCFs,
+                                    // then add it to vcfsToUse
                                     for ( var j in inputs.vcfsForOxoG )
                                     {
                                         if ( inputs.vcfsForOxoG[j].basename.indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 && /.*\.gz$/.test(inputs.vcfsForOxoG[j].basename))
                                         {
                                             vcfsToUse.push (  inputs.vcfsForOxoG[j]    )
+                                        }
+                                    }
+                                    // Now also do same for the SNVs extracted from INDELs.
+                                    for ( var j in inputs.extractedSnvs )
+                                    {
+                                        if ( inputs.extractedSnvs[j].basename.indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 && /.*\.gz$/.test(inputs.extractedSnvs[j].basename))
+                                        {
+                                            vcfsToUse.push (  inputs.extractedSnvs[j]    )
                                         }
                                     }
                                 }
@@ -399,21 +410,120 @@ steps:
     # we need OxoG filtered files, and minibams (tumour and normal).
     # Then we need to scatter. We can scatter on minibams, and perform all annotations
     # for each minibam at a time.
-    # run_annotator:
-    #     in:
-    #         minibams: gather_minibams/minibams
-    #         oxogVCFs: flatten_oxog_output/oxogVCFs
-    #         tumours_list:
-    #             source: tumours
-    #         scatter: [minibams]
-    #         run:
-    #             class: Workflow
-    #             inputs:
-    #             outputs:
-    #             steps:
-    #                 annotate:
-    #                     in:
-    #                     out:
-    #                     run: sga-annotate-docker/Dockstore.cwl
+    run_annotator:
+        in:
+            tumourMinibams: run_variant_bam/minibam
+            oxogVCFs: flatten_oxog_output/oxogVCFs
+            tumours_list:
+                source: tumours
+            normalMinibam: run_variant_bam_normal/minibam
+            tumourMinibamToUse:
+                default: ""
+            snvsToUse:
+                default: []
+            indelsToUse:
+                default: []
+        out:
+            [annotated_vcf]
+        scatter: [tumours]
+        run:
+            class: Workflow
+            inputs:
+                tumourMinibams:
+                    type: File[]
+                tumourMinibamToUse:
+                    type: File
+                    valueFrom: |
+                        ${
+                            var minibamsToUse
+                            for ( j in inputs.tumourMinibams )
+                            {
+                                // The minibam should be named the same as the regular bam, except for the "mini-" prefix.
+                                // This condition should only ever be satisfied once.
+                                if (inputs.tumourMinibams[j].basename.indexOf( inputs.tumours_list.tumourBamFile ) !== -1 )
+                                {
+                                    minibamToUse = inputs.tumourMinibams[j]
+                                }
+                            }
+                            return minibamToUse
+                        }
+                oxogVCFs:
+                    type: File[]
+                snvsToUse:
+                    type: File[]
+                    valueFrom: |
+                        ${
+                            var vcfsToUse = []
+                            for (i in inputs.tumours.associatedVcfs)
+                            {
+                                for (j in inputs.oxogVCFs)
+                                {
+                                    if ( inputs.tumours.associatedVcfs.indexOf("snv") !==-1 )
+                                    {
+                                        if ( inputs.associatedVcfs[i].replace(".vcf.gz").indexOf(inputs.oxogVCFs[j]) !== -1 )
+                                        {
+                                            vcfsToUse.push(inputs.oxogVCFs[j])
+                                        }
+                                    }
+                                }
+                            }
+                            return vcfsToUse
+                        }
+                indelsToUse:
+                    type: File[]
+                    valueFrom: |
+                        ${
+                            var vcfsToUse = []
+                            for (i in inputs.tumours.associatedVcfs)
+                            {
+                                if ( inputs.tumours.associatedVcfs.indexOf("indel") !==-1 )
+                                {
+                                    for (j in inputs.oxogVCFs)
+                                    {
+                                        if ( inputs.tumours.associatedVcfs[i].replace(".vcf.gz").indexOf(inputs.oxogVCFs[j]) !== -1 )
+                                        {
+                                            vcfsToUse.push(inputs.oxogVCFs[j])
+                                        }
+                                    }
+                                }
+                            }
+                            return vcfsToUse
+                        }
+                tumours_list:
+                    type: "TumourType.yaml#TumourType"
+                normalMinibam:
+                    type: File
+            outputs:
+                annotated_vcfs: File[]
+            steps:
+                # This subworkflow step will annotate ALL INDELs for a specific tumour
+                # needs to scatter over indelsToUse
+                annotate_indels:
+                    in:
+                        variant_type:
+                            valueFrom: "INDEL"
+                        input_vcf: indelsToUse
+                        normal_bam: normalMinibam
+                        tumour_bam: tumourMinibamToUse
+                        output:
+                            valueFrom: ""
+                    out:
+                        [annotated_vcf]
+                    run: sga-annotate-docker/Dockstore.cwl
+                # This subworkflow step will annotate ALL SNVs for a specific tumour
+                # needs to scatter over snvsToUse
+                annotate_snvs:
+                    in:
+                        variant_type:
+                            valueFrom: "SNV"
+                        input_vcf: snvsToUse
+                        normal_bam: normalMinibam
+                        tumour_bam: tumourMinibamToUse
+                        output:
+                            valueFrom: ""
+                    out:
+                        [annotated_vcf]
+                    run: sga-annotate-docker/Dockstore.cwl
+
 
     # Do consensus-calling.
