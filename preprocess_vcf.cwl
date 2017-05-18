@@ -318,6 +318,7 @@ steps:
                 mergedVcfs: File[]
                 extractedSnvs: File[]
                 normalizedVcfs: File[]
+                cleanedVcfs: File[]
             outputs:
               output_record: "PreprocessedFilesType.yaml#PreprocessedFileset"
             expression: |
