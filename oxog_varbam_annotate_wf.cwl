@@ -69,6 +69,12 @@ outputs:
     minibams:
         type: File[]
         outputSource: gather_minibams/minibams
+    annotated_files:
+        type: File[]
+        outputSource: flatten_annotator_output/annotated_vcfs
+    # normalMinibam:
+    #     type: File
+    #     outputSource: run_variant_bam_normal/minibam
     # blah:
     #   type: File[]
     #     outputSource: filter_merged_sv/merged_sv_vcf
@@ -181,7 +187,8 @@ steps:
             input-bam: normalBam
             outfile:
                 type: string
-                valueFrom: $("mini-".concat(inputs.normalBam.basename))
+                source: normalBam
+                valueFrom: $("mini-".concat(self.basename))
         run: Variantbam-for-dockstore/variantbam.cwl
         out: [minibam]
 
@@ -253,7 +260,7 @@ steps:
                         input-indel: input-indel
                     out: [minibam]
 
-    # Gather all minibams into a single output array.
+    #Gather all minibams into a single output array.
     gather_minibams:
         in:
             tumour_minibams: run_variant_bam/minibam
@@ -408,7 +415,7 @@ steps:
             indelsToUse:
                 default: []
         out:
-            [annotated_vcf]
+            [annotated_vcfs]
         scatter: [tumours_list]
         run:
             class: Workflow
@@ -479,7 +486,7 @@ steps:
                 normalMinibam:
                     type: File
             outputs:
-                annotated_vcf:
+                annotated_vcfs:
                     type: File[]
                     outputSource: gather_annotated_vcfs/annotated_vcfs
             steps:
@@ -526,10 +533,25 @@ steps:
                             annotated_indels: File[]
                             annotated_snvs: File[]
                         outputs:
-                            annotated_vcfs: File
+                            annotated_vcfs: File[]
                         expression: |
                             $({ annotated_vcfs: annotated_indels.concat(annotated_snvs) })
                     out:
                         [annotated_vcfs]
 
+
+    flatten_annotator_output:
+        in:
+            array_of_arrays: run_annotator/annotated_vcfs
+        run:
+            class: ExpressionTool
+            inputs:
+                array_of_arrays:
+                    type: { type: array, items: { type: array, items: File } }
+            expression: |
+                $({ annotated_vcfs: flatten_nested_arrays(inputs) })
+            outputs:
+                annotated_vcfs: File[]
+        out:
+            [annotated_vcfs]
     # Do consensus-calling.
