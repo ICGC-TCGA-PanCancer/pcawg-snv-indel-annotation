@@ -181,10 +181,9 @@ steps:
             input-bam: normalBam
             outfile:
                 type: string
-                valueFrom: $("mini-".normalBam.basename)
+                valueFrom: $("mini-".concat(normalBam.basename))
         run: Variantbam-for-dockstore/variantbam.cwl
         out: [minibam]
-
 
     # Do variantbam
     # This needs to be run for each tumour, using VCFs that are merged pipelines per tumour.
@@ -333,7 +332,6 @@ steps:
                     type: File[]
                     valueFrom: |
                         ${
-                            //TODO: Move this function to separate JS file.
                             var vcfsToUse = []
                             // Need to search through vcfsForOxoG (cleaned VCFs that have been zipped and index) and preprocess_vcfs/extractedSNVs to find VCFs
                             // that match the names of those in in_data.inputs.associatedVCFs
@@ -343,9 +341,6 @@ steps:
                             {
                                 if ( associatedVcfs[i].indexOf(".snv") !== -1 )
                                 {
-                                    // Loop through the VCFs that have been prepped for OxoG - check that they should be
-                                    // added to vcfsToUse - if their filename is in the current tumour's list of associated VCFs,
-                                    // then add it to vcfsToUse
                                     for ( var j in inputs.vcfsForOxoG )
                                     {
                                         if ( inputs.vcfsForOxoG[j].basename.indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 && /.*\.gz$/.test(inputs.vcfsForOxoG[j].basename))
@@ -353,15 +348,15 @@ steps:
                                             vcfsToUse.push (  inputs.vcfsForOxoG[j]    )
                                         }
                                     }
-                                    // Now also do same for the SNVs extracted from INDELs.
-                                    for ( var j in inputs.extractedSnvs )
-                                    {
-                                        if ( inputs.extractedSnvs[j].basename.indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 && /.*\.gz$/.test(inputs.extractedSnvs[j].basename))
-                                        {
-                                            vcfsToUse.push (  inputs.extractedSnvs[j]    )
-                                        }
-                                    }
+                                    // for ( var j in inputs.extractedSnvs )
+                                    // {
+                                    //     if ( inputs.extractedSnvs[j].basename.replace(".pass-filtered.cleaned.vcf.normalized.extracted-SNVs.vcf.gz","").indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 && /.*\.gz$/.test(inputs.extractedSnvs[j].basename))
+                                    //     {
+                                    //         vcfsToUse.push (  inputs.extractedSnvs[j]    )
+                                    //     }
+                                    // }
                                 }
+                                vcfsToUse.concat(inputs.extractedSnvs)
                             }
                             return vcfsToUse
                         }
@@ -389,18 +384,7 @@ steps:
                 array_of_arrays:
                     type: { type: array, items: { type: array, items: File } }
             expression: |
-                ${
-                    //TODO: Move this function to separate JS file.
-                    var flattened_array = []
-                    for (i in inputs.array_of_arrays)
-                    {
-                        for (j in inputs.array_of_arrays[i])
-                        {
-                            flattened_array.push( inputs.array_of_arrays[j])
-                        }
-                    }
-                    return flattened_array
-                }
+                $({ oxogVCFs: flatten_nested_arrays(inputs) })
             outputs:
                 oxogVCFs: File[]
         out:
@@ -425,7 +409,7 @@ steps:
                 default: []
         out:
             [annotated_vcf]
-        scatter: [tumours]
+        scatter: [tumours_list]
         run:
             class: Workflow
             inputs:
@@ -494,7 +478,7 @@ steps:
                 normalMinibam:
                     type: File
             outputs:
-                annotated_vcfs: File[]
+                annotated_vcf: File[]
             steps:
                 # This subworkflow step will annotate ALL INDELs for a specific tumour
                 # needs to scatter over indelsToUse
@@ -507,6 +491,7 @@ steps:
                         tumour_bam: tumourMinibamToUse
                         output:
                             valueFrom: ""
+                    scatter: [input_vcf]
                     out:
                         [annotated_vcf]
                     run: sga-annotate-docker/Dockstore.cwl
@@ -521,6 +506,7 @@ steps:
                         tumour_bam: tumourMinibamToUse
                         output:
                             valueFrom: ""
+                    scatter: [input_vcf]
                     out:
                         [annotated_vcf]
                     run: sga-annotate-docker/Dockstore.cwl
