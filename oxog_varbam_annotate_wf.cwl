@@ -181,7 +181,7 @@ steps:
             input-bam: normalBam
             outfile:
                 type: string
-                valueFrom: $("mini-".concat(normalBam.basename))
+                valueFrom: $("mini-".concat(inputs.normalBam.basename))
         run: Variantbam-for-dockstore/variantbam.cwl
         out: [minibam]
 
@@ -419,20 +419,41 @@ steps:
                     type: File
                     valueFrom: |
                         ${
-                            var minibamsToUse
-                            for ( j in inputs.tumourMinibams )
+                            // var minibamToUse
+                            for (var j in inputs.tumourMinibams )
                             {
                                 // The minibam should be named the same as the regular bam, except for the "mini-" prefix.
                                 // This condition should only ever be satisfied once.
-                                if (inputs.tumourMinibams[j].basename.indexOf( inputs.tumours_list.tumourBamFile ) !== -1 )
+                                if (inputs.tumourMinibams[j].basename.indexOf( inputs.tumours_list.bamFileName ) !== -1 )
                                 {
-                                    minibamToUse = inputs.tumourMinibams[j]
+                                    return inputs.tumourMinibams[j]
                                 }
                             }
-                            return minibamToUse
+                            //return minibamToUse
+                            return undefined
                         }
                 oxogVCFs:
                     type: File[]
+                indelsToUse:
+                    type: File[]
+                    valueFrom: |
+                        ${
+                            var vcfsToUse = []
+                            for (i in inputs.tumours.associatedVcfs)
+                            {
+                                for (j in inputs.oxogVCFs)
+                                {
+                                    if ( inputs.tumours.associatedVcfs.indexOf("snv") !==-1 )
+                                    {
+                                        if ( inputs.associatedVcfs[i].replace(".vcf.gz").indexOf(inputs.oxogVCFs[j]) !== -1 )
+                                        {
+                                            vcfsToUse.push(inputs.oxogVCFs[j])
+                                        }
+                                    }
+                                }
+                            }
+                            return vcfsToUse
+                        }
                 snvsToUse:
                     type: File[]
                     valueFrom: |
@@ -453,32 +474,14 @@ steps:
                             }
                             return vcfsToUse
                         }
-                indelsToUse:
-                    type: File[]
-                    valueFrom: |
-                        ${
-                            var vcfsToUse = []
-                            for (i in inputs.tumours.associatedVcfs)
-                            {
-                                if ( inputs.tumours.associatedVcfs.indexOf("indel") !==-1 )
-                                {
-                                    for (j in inputs.oxogVCFs)
-                                    {
-                                        if ( inputs.tumours.associatedVcfs[i].replace(".vcf.gz").indexOf(inputs.oxogVCFs[j]) !== -1 )
-                                        {
-                                            vcfsToUse.push(inputs.oxogVCFs[j])
-                                        }
-                                    }
-                                }
-                            }
-                            return vcfsToUse
-                        }
                 tumours_list:
                     type: "TumourType.yaml#TumourType"
                 normalMinibam:
                     type: File
             outputs:
-                annotated_vcf: File[]
+                annotated_vcf:
+                    type: File[]
+                    outputSource: gather_annotated_vcfs/annotated_vcfs
             steps:
                 # This subworkflow step will annotate ALL INDELs for a specific tumour
                 # needs to scatter over indelsToUse
@@ -489,6 +492,7 @@ steps:
                         input_vcf: indelsToUse
                         normal_bam: normalMinibam
                         tumour_bam: tumourMinibamToUse
+                        # It doesn't look like "output" is actually used by Jonathan's tool.
                         output:
                             valueFrom: ""
                     scatter: [input_vcf]
@@ -504,6 +508,7 @@ steps:
                         input_vcf: snvsToUse
                         normal_bam: normalMinibam
                         tumour_bam: tumourMinibamToUse
+                        # It doesn't look like "output" is actually used by Jonathan's tool.
                         output:
                             valueFrom: ""
                     scatter: [input_vcf]
@@ -511,5 +516,20 @@ steps:
                         [annotated_vcf]
                     run: sga-annotate-docker/Dockstore.cwl
 
+                gather_annotated_vcfs:
+                    in:
+                        annotated_indels: annotate_indels/annotated_vcf
+                        annotated_snvs: annotate_snvs/annotated_vcf
+                    run:
+                        class: ExpressionTool
+                        inputs:
+                            annotated_indels: File[]
+                            annotated_snvs: File[]
+                        outputs:
+                            annotated_vcfs: File
+                        expression: |
+                            $({ annotated_vcfs: annotated_indels.concat(annotated_snvs) })
+                    out:
+                        [annotated_vcfs]
 
     # Do consensus-calling.
