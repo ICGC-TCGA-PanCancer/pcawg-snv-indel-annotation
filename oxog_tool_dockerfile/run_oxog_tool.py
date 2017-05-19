@@ -123,8 +123,8 @@ new_names = [pairID+'.oxoG.supplementary.tar.gz',
             pairID+'.oxoG.maf']
 
 for vcf in argvars['vcfs']:
-    path_to_oxog_vcf = vcf.replace('.vcf.gz','.oxoG.vcf.gz')
-    path_to_oxog_tbi = vcf.replace('.vcf.gz','.oxoG.vcf.gz.tbi')
+    path_to_oxog_vcf = os.path.basename(vcf).replace('.vcf.gz','.oxoG.vcf.gz')
+    path_to_oxog_tbi = os.path.basename(vcf).replace('.vcf.gz','.oxoG.vcf.gz.tbi')
     subpaths.extend(['/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_vcf,
                     '/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_tbi])
     new_names.extend([path_to_oxog_vcf,path_to_oxog_tbi])
