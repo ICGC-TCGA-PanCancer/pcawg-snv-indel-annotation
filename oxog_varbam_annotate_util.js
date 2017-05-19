@@ -17,14 +17,20 @@ function appendBai(str) {
 	return str.concat(".bai")
 }
 
-function flatten_nested_arrays(inputs)
+function flatten_nested_arrays(array_of_arrays)
 {
 	var flattened_array = []
-	for (var i in inputs.array_of_arrays)
+	for (var i in array_of_arrays)
 	{
-		for (var j in inputs.array_of_arrays[i])
+		var item = array_of_arrays[i]
+		if (item.isArray)
 		{
-			flattened_array.push( inputs.array_of_arrays[j])
+			// recursively flatten subarrays.
+			flattened_array = flattened_array.concat(flatten_nested_arrays(item))
+		}
+		else
+		{
+			flattened_array.push(item)
 		}
 	}
 	return flattened_array
@@ -56,4 +62,28 @@ function createArrayOfFilesForOxoG(inputs) {
 		}
 	}
 	return vcfsToUse
+}
+
+
+function getListOfVcfsForAnnotator(inputs)
+{
+	var vcfsToUse = [];
+	//return inputs.oxogVCFs[0]
+	var flattened_oxogs = flatten_nested_arrays(inputs.oxogVCFs);
+
+	var associated_indels = inputs.tumours_list.associatedVcfs.filter( function(item)
+		{
+			return item.indexOf("indel") !== -1;
+		});
+	for (var i in associated_indels)
+	{
+		for (var j in flattened_oxogs)
+		{
+			//if ( flattened_oxogs[j].basename.indexOf(associated_indels[i].replace(".vcf.gz","")) !== -1 )
+			{
+				vcfsToUse.push(flattened_oxogs[j]);
+			}
+		}
+	}
+	return vcfsToUse;
 }

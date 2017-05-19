@@ -391,7 +391,7 @@ steps:
                 array_of_arrays:
                     type: { type: array, items: { type: array, items: File } }
             expression: |
-                $({ oxogVCFs: flatten_nested_arrays(inputs) })
+                $({ oxogVCFs: flatten_nested_arrays(inputs.array_of_arrays[0]) })
             outputs:
                 oxogVCFs: File[]
         out:
@@ -420,6 +420,8 @@ steps:
         run:
             class: Workflow
             inputs:
+                tumours_list:
+                    type: "TumourType.yaml#TumourType"
                 tumourMinibams:
                     type: File[]
                 tumourMinibamToUse:
@@ -444,38 +446,25 @@ steps:
                 indelsToUse:
                     type: File[]
                     valueFrom: |
-                        ${
-                            var vcfsToUse = []
-                            for (i in inputs.tumours.associatedVcfs)
-                            {
-                                for (j in inputs.oxogVCFs)
-                                {
-                                    if ( inputs.tumours.associatedVcfs.indexOf("snv") !==-1 )
-                                    {
-                                        if ( inputs.associatedVcfs[i].replace(".vcf.gz").indexOf(inputs.oxogVCFs[j]) !== -1 )
-                                        {
-                                            vcfsToUse.push(inputs.oxogVCFs[j])
-                                        }
-                                    }
-                                }
-                            }
-                            return vcfsToUse
-                        }
+                        $( getListOfVcfsForAnnotator(inputs) )
                 snvsToUse:
                     type: File[]
                     valueFrom: |
                         ${
                             var vcfsToUse = []
-                            for (i in inputs.tumours.associatedVcfs)
-                            {
-                                for (j in inputs.oxogVCFs)
+                            var flattened_oxogs = flatten_nested_arrays(inputs.oxogVCFs)
+                            var associated_snvs = inputs.tumours_list.associatedVcfs.filter( function(item)
                                 {
-                                    if ( inputs.tumours.associatedVcfs.indexOf("snv") !==-1 )
+                                    return item.indexOf("snv") !== -1
+                                }
+                            )
+                            for (var i in associated_snvs)
+                            {
+                                for (var j in flattened_oxogs)
+                                {
+                                    //if ( flattened_oxogs[j].basename.indexOf(associated_snvs[i].replace(".vcf.gz","")) !== -1 )
                                     {
-                                        if ( inputs.associatedVcfs[i].replace(".vcf.gz").indexOf(inputs.oxogVCFs[j]) !== -1 )
-                                        {
-                                            vcfsToUse.push(inputs.oxogVCFs[j])
-                                        }
+                                        vcfsToUse.push(flattened_oxogs[j])
                                     }
                                 }
                             }
@@ -535,7 +524,7 @@ steps:
                         outputs:
                             annotated_vcfs: File[]
                         expression: |
-                            $({ annotated_vcfs: annotated_indels.concat(annotated_snvs) })
+                            $({ annotated_vcfs: inputs.annotated_indels.concat(inputs.annotated_snvs) })
                     out:
                         [annotated_vcfs]
 
@@ -549,7 +538,7 @@ steps:
                 array_of_arrays:
                     type: { type: array, items: { type: array, items: File } }
             expression: |
-                $({ annotated_vcfs: flatten_nested_arrays(inputs) })
+                $({ annotated_vcfs: flatten_nested_arrays(inputs.array_of_arrays) })
             outputs:
                 annotated_vcfs: File[]
         out:
