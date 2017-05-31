@@ -6,7 +6,7 @@ RUN apt-get update
 #RUN apt list upgradable
 #RUN apt-get upgrade -y
 
-RUN apt-get install -y apt-utils git tabix
+RUN apt-get install -y apt-utils git tabix bash=4.3-14ubuntu1.2
 
 # Install bcftools - this is used for normalizing VCFs
 
