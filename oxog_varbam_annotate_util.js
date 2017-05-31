@@ -43,23 +43,26 @@ function createArrayOfFilesForOxoG(inputs) {
 	// that match the names of those in in_data.inputs.associatedVCFs
 	//
 	var associatedVcfs = inputs.in_data.associatedVcfs
-	for (var i in associatedVcfs) {
-		if (associatedVcfs[i].indexOf(".snv") !== -1) {
-			// Loop through the VCFs that have been prepped for OxoG - check that they should be
-			// added to vcfsToUse - if their filename is in the current tumour's list of associated VCFs,
-			// then add it to vcfsToUse
-			for (var j in inputs.vcfsForOxoG) {
-				if (inputs.vcfsForOxoG[j].basename.indexOf(associatedVcfs[i].replace(".vcf.gz", "")) !== -1 && /.*\.gz$/.test(inputs.vcfsForOxoG[j].basename)) {
-					vcfsToUse.push(inputs.vcfsForOxoG[j])
+	for ( var i in associatedVcfs )
+	{
+		if ( associatedVcfs[i].indexOf(".snv") !== -1 )
+		{
+			for ( var j in inputs.vcfsForOxoG )
+			{
+				if ( inputs.vcfsForOxoG[j].basename.indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 && /.*\.gz$/.test(inputs.vcfsForOxoG[j].basename))
+				{
+					vcfsToUse.push (  inputs.vcfsForOxoG[j]    )
 				}
 			}
-			// Now also do same for the SNVs extracted from INDELs.
-			for (var j in inputs.extractedSnvs) {
-				if (inputs.extractedSnvs[j].basename.indexOf(associatedVcfs[i].replace(".vcf.gz", "")) !== -1 && /.*\.gz$/.test(inputs.extractedSnvs[j].basename)) {
-					vcfsToUse.push(inputs.extractedSnvs[j])
-				}
-			}
+			// for ( var j in inputs.extractedSnvs )
+			// {
+			//     if ( inputs.extractedSnvs[j].basename.replace(".pass-filtered.cleaned.vcf.normalized.extracted-SNVs.vcf.gz","").indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 && /.*\.gz$/.test(inputs.extractedSnvs[j].basename))
+			//     {
+			//         vcfsToUse.push (  inputs.extractedSnvs[j]    )
+			//     }
+			// }
 		}
+		vcfsToUse.concat(inputs.extractedSnvs)
 	}
 	return vcfsToUse
 }
@@ -86,4 +89,42 @@ function getListOfVcfsForAnnotator(inputs)
 		}
 	}
 	return vcfsToUse;
+}
+
+function chooseMiniBamsForAnnotator(inputs)
+{
+	// var minibamToUse
+	for (var j in inputs.tumourMinibams )
+	{
+		// The minibam should be named the same as the regular bam, except for the "mini-" prefix.
+		// This condition should only ever be satisfied once.
+		if (inputs.tumourMinibams[j].basename.indexOf( inputs.tumours_list.bamFileName ) !== -1 )
+		{
+			return inputs.tumourMinibams[j]
+		}
+	}
+	//return minibamToUse
+	return undefined
+}
+
+function chooseSNVsForAnnotator(inputs)
+{
+	var vcfsToUse = []
+	var flattened_oxogs = flatten_nested_arrays(inputs.oxogVCFs)
+	var associated_snvs = inputs.tumours_list.associatedVcfs.filter( function(item)
+		{
+			return item.indexOf("snv") !== -1
+		}
+	)
+	for (var i in associated_snvs)
+	{
+		for (var j in flattened_oxogs)
+		{
+			//if ( flattened_oxogs[j].basename.indexOf(associated_snvs[i].replace(".vcf.gz","")) !== -1 )
+			{
+				vcfsToUse.push(flattened_oxogs[j])
+			}
+		}
+	}
+	return vcfsToUse
 }
