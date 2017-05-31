@@ -4,7 +4,7 @@
 cwlVersion: v1.0
 class: CommandLineTool
 
-description: |
+doc: |
     This tool will run OxoG. The OxoG tool was written by Dimitri Livitz. This CWL wrapper was written by Solomon Shorser.
 
 # Input file should look like this:
@@ -51,25 +51,23 @@ inputs:
           position: 1
           prefix: --pairID
     - id: tumourBamFilename
-      type: string
+      type: File
       inputBinding:
           position: 2
           prefix: --bamName
-    - id: tumourBamIndexFilename
-      type: string
-      inputBinding:
-          position: 3
-          prefix: --baiName
+      secondaryFiles: ".bai"
     - id: oxoQScore
       type: string
       inputBinding:
           position: 4
           prefix: --oxoqScore
     - id: vcfNames
-      type: string[]
+      type: File[]
       inputBinding:
           position: 5
           prefix: --vcfs
+    #   secondaryFiles:
+    #       - ".tbi"
     - id: refDataDir
       type: Directory
       inputBinding:

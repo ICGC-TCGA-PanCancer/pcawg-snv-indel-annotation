@@ -4,7 +4,7 @@ class: CommandLineTool
 id: "clean-vcf"
 label: "clean-vcf"
 
-description: |
+doc: |
     This tool will clean a VCF for use in the OxoG workflow.
 
 dct:creator:

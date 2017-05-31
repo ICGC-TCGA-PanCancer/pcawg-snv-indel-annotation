@@ -17,7 +17,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--inputDir')
 parser.add_argument('--pairID')
 parser.add_argument('--bamName')
-parser.add_argument('--baiName')
 parser.add_argument('--oxoqScore')
 parser.add_argument('--refDataDir')
 parser.add_argument('--vcfs', nargs='+')
@@ -28,13 +27,13 @@ argvars = vars(args)
 inputDir = argvars['inputDir']
 
 pairID = argvars['pairID']
-bam_tumor = inputDir + '/' + argvars['bamName']
-bam_tumor_index = inputDir + '/' + argvars['baiName']
+bam_tumor = argvars['bamName']
 oxoq = argvars['oxoqScore']
 
+vcfsArgs = argvars['vcfs']
 vcfs = ''
 for vcf in argvars['vcfs']:
-    vcfs +=  (' ' + inputDir + '/' + vcf )
+    vcfs += vcf + ' '
 
 refdata1=argvars['refDataDir']
 
@@ -124,8 +123,8 @@ new_names = [pairID+'.oxoG.supplementary.tar.gz',
             pairID+'.oxoG.maf']
 
 for vcf in argvars['vcfs']:
-    path_to_oxog_vcf = vcf.replace('.vcf.gz','.oxoG.vcf.gz')
-    path_to_oxog_tbi = vcf.replace('.vcf.gz','.oxoG.vcf.gz.tbi')
+    path_to_oxog_vcf = os.path.basename(vcf).replace('.vcf.gz','.oxoG.vcf.gz')
+    path_to_oxog_tbi = os.path.basename(vcf).replace('.vcf.gz','.oxoG.vcf.gz.tbi')
     subpaths.extend(['/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_vcf,
                     '/var/spool/cwl/pipette_jobs/links_for_gnos/annotate_failed_sites_to_vcfs/'+path_to_oxog_tbi])
     new_names.extend([path_to_oxog_vcf,path_to_oxog_tbi])
