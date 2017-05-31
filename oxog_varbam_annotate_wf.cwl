@@ -490,7 +490,7 @@ steps:
                         tumour_bam: tumourMinibamToUse
                         # It doesn't look like "output" is actually used by Jonathan's tool.
                         output:
-                            valueFrom: ""
+                            valueFrom: "annotated_indels.vcf"
                     scatter: [input_vcf]
                     out:
                         [annotated_vcf]
@@ -506,7 +506,7 @@ steps:
                         tumour_bam: tumourMinibamToUse
                         # It doesn't look like "output" is actually used by Jonathan's tool.
                         output:
-                            valueFrom: ""
+                            valueFrom: "annotated_snvs.vcf"
                     scatter: [input_vcf]
                     out:
                         [annotated_vcf]
