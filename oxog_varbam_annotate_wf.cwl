@@ -69,6 +69,7 @@ outputs:
     minibams:
         type: File[]
         outputSource: gather_minibams/minibams
+        secondaryFiles: "*.bai"
     annotated_files:
         type: File[]
         outputSource: flatten_annotator_output/annotated_vcfs
@@ -273,7 +274,7 @@ steps:
             outputs:
                 minibams: File[]
             expression: |
-                $( { minibams: inputs.tumour_minibams.push.apply(inputs.normal_minibam) } )
+                $( { minibams: inputs.tumour_minibams.concat(inputs.normal_minibam) } )
         out: [minibams]
 
     zip_and_index_files_for_oxog:
@@ -488,9 +489,8 @@ steps:
                         input_vcf: indelsToUse
                         normal_bam: normalMinibam
                         tumour_bam: tumourMinibamToUse
-                        # It doesn't look like "output" is actually used by Jonathan's tool.
                         output:
-                            valueFrom: "annotated_indels.vcf"
+                            valueFrom: $(inputs.input_vcf.basename.replace(".vcf","_annotated.vcf"))
                     scatter: [input_vcf]
                     out:
                         [annotated_vcf]
@@ -504,9 +504,8 @@ steps:
                         input_vcf: snvsToUse
                         normal_bam: normalMinibam
                         tumour_bam: tumourMinibamToUse
-                        # It doesn't look like "output" is actually used by Jonathan's tool.
                         output:
-                            valueFrom: "annotated_snvs.vcf"
+                            valueFrom: $(inputs.input_vcf.basename.replace(".vcf","_annotated.vcf"))
                     scatter: [input_vcf]
                     out:
                         [annotated_vcf]
