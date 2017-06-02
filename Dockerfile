@@ -6,7 +6,7 @@ RUN apt-get update
 #RUN apt list upgradable
 #RUN apt-get upgrade -y
 
-RUN apt-get install -y apt-utils git tabix bash=4.3-14ubuntu1.2
+RUN apt-get install -y apt-utils git tabix bash=4.3-14ubuntu1.2 openldap=2.4.31-1+nmu2ubuntu8.4
 
 # Install bcftools - this is used for normalizing VCFs
 
