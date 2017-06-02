@@ -222,18 +222,11 @@ steps:
                     type: File
                 input-bam:
                     type: File
-                    inputBinding:
-                        valueFrom: |
-                            $(
-                                {
-                                    "class":"File",
-                                    "location": inputs.inputFileDirectory.location + "/" + inputs.in_data.bamFileName
-                                }
-                            )
+                    valueFrom: |
+                        $( { "class":"File", "location": inputs.inputFileDirectory.location + "/" + inputs.in_data.bamFileName } )
                 outfile:
                     type: string
-                    inputBinding:
-                        valueFrom: $("mini-".concat(inputs.in_data.tumourId).concat(".bam"))
+                    valueFrom: $("mini-".concat(inputs.in_data.tumourId).concat(".bam"))
             steps:
                 sub_run_var_bam:
                     run: Variantbam-for-dockstore/variantbam.cwl
@@ -311,14 +304,8 @@ steps:
                     type: "TumourType.yaml#TumourType"
                 tumourBamFilename:
                     type: File
-                    inputBinding:
-                        valueFrom: |
-                            $(
-                                {
-                                    "class":"File",
-                                    "location": inputs.inputFileDirectory.location + "/" + inputs.in_data.bamFileName
-                                }
-                            )
+                    valueFrom: |
+                        $( { "class":"File", "location": inputs.inputFileDirectory.location + "/" + inputs.in_data.bamFileName } )
                 refDataDir:
                     type: Directory
                 oxoQScore:
@@ -326,15 +313,13 @@ steps:
                 # Need to get VCFs for this tumour. Need an array made of the outputs of earlier VCF pre-processing steps, filtered by tumourID
                 vcfNames:
                     type: File[]
-                    inputBinding:
-                        valueFrom: |
-                            ${
-                                return createArrayOfFilesForOxoG(inputs)
-                            }
+                    valueFrom: |
+                        ${
+                            return createArrayOfFilesForOxoG(inputs)
+                        }
                 tumourID:
                     type: string
-                    inputBinding:
-                        valueFrom: $(inputs.in_data.tumourId)
+                    valueFrom: $(inputs.in_data.tumourId)
             steps:
                 sub_run_oxog:
                     run: oxog.cwl
@@ -391,27 +376,24 @@ steps:
                     type: File[]
                 tumourMinibamToUse:
                     type: File
-                    inputBinding:
-                        valueFrom: |
-                            ${
-                                return chooseMiniBamsForAnnotator(inputs)
-                            }
+                    valueFrom: |
+                        ${
+                            return chooseMiniBamsForAnnotator(inputs)
+                        }
                 oxogVCFs:
                     type: File[]
                 indelsToUse:
                     type: File[]
-                    inputBinding:
-                        valueFrom: |
-                            ${
-                                return getListOfVcfsForAnnotator(inputs)
-                            }
+                    valueFrom: |
+                        ${
+                            return getListOfVcfsForAnnotator(inputs)
+                        }
                 snvsToUse:
                     type: File[]
-                    inputBinding:
-                        valueFrom: |
-                            ${
-                                return chooseSNVsForAnnotator(inputs)
-                            }
+                    valueFrom: |
+                        ${
+                            return chooseSNVsForAnnotator(inputs)
+                        }
                 tumours_list:
                     type: "TumourType.yaml#TumourType"
                 normalMinibam:
