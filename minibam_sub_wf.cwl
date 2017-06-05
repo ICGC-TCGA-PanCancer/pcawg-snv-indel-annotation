@@ -52,7 +52,7 @@ steps:
                     }
             outfile:
                 source: [in_data]
-                valueFrom: $("mini-".concat(self[0].tumourId).concat(".bam"))
+                valueFrom: $("mini-".concat(self.tumourId).concat(".bam"))
             snv-padding: snv-padding
             sv-padding: sv-padding
             indel-padding: indel-padding
