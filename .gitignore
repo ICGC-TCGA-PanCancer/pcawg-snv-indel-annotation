@@ -1,5 +1,9 @@
 *.vcf
 *.vcf.gz
+*.tbi
+*.maf
 *.input.json
 *.fasta
 *.fai
+*.bam
+*.bam.bai
