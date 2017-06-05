@@ -56,7 +56,7 @@ steps:
             inputs:
                 zipped_file:
                     type: File
-            arguments: [$(runtime.outdir + "/" + inputs.zipped_file.basename)]
+            arguments: [ $( runtime.outdir + "/" + inputs.zipped_file.basename ) ]
             outputs:
                 indexed_file:
                     type: File
