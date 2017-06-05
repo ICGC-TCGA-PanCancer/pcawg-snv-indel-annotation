@@ -159,6 +159,23 @@ steps:
                 $({ merged_sv_vcf: filterFileArray("sv",inputs.in_vcfs) })
         out: [merged_sv_vcf]
 
+    # Do variantbam
+    # This needs to be run for each tumour, using VCFs that are merged pipelines per tumour.
+    run_variant_bam:
+        in:
+            in_data:
+                source: tumours
+            indel-padding: indel-padding
+            snv-padding: snv-padding
+            sv-padding: sv-padding
+            input-snv: filter_merged_snv/merged_snv_vcf
+            input-sv: filter_merged_sv/merged_sv_vcf
+            input-indel: filter_merged_indel/merged_indel_vcf
+            inputFileDirectory: inputFileDirectory
+        out: [minibam]
+        scatter: [in_data]
+        run: ./minibam_sub_wf.cwl
+
     # Create minibam for normal BAM. It would be nice to figure out how to get this into
     # the main run_variant_bam step that currently only does tumour BAMs.
     run_variant_bam_normal:
@@ -177,23 +194,6 @@ steps:
                 valueFrom: $("mini-".concat(self.basename))
         run: Variantbam-for-dockstore/variantbam.cwl
         out: [minibam]
-
-    # Do variantbam
-    # This needs to be run for each tumour, using VCFs that are merged pipelines per tumour.
-    run_variant_bam:
-        in:
-            in_data:
-                source: tumours
-            indel-padding: indel-padding
-            snv-padding: snv-padding
-            sv-padding: sv-padding
-            input-snv: filter_merged_snv/merged_snv_vcf
-            input-sv: filter_merged_sv/merged_sv_vcf
-            input-indel: filter_merged_indel/merged_indel_vcf
-            inputFileDirectory: inputFileDirectory
-        out: [minibam]
-        scatter: [in_data]
-        run: ./minibam_sub_wf.cwl
 
     #Gather all minibams into a single output array.
     gather_minibams:
