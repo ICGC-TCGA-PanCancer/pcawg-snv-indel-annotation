@@ -86,13 +86,9 @@ steps:
                                 ${
                                     return chooseMiniBamsForAnnotator(self[0], self[1])
                                 }
-                        # output:
-                        #     source: [input_vcf]
-                        #     valueFrom: $( self.basename.replace(".vcf","_annotated.vcf") )
                     scatter: [input_vcf]
                     out:
                         [annotated_vcf]
-                    # run: sga-annotate-docker/Dockstore.cwl
                     run:
                         class: Workflow
                         inputs:
@@ -136,13 +132,9 @@ steps:
                                 ${
                                     return chooseMiniBamsForAnnotator(self[0], self[1])
                                 }
-                        # output:
-                        #     source: [input_vcf]
-                        #     valueFrom: $( self.basename.replace(".vcf","_annotated.vcf"))
                     scatter: [input_vcf]
                     out:
                         [annotated_vcf]
-                    # run: sga-annotate-docker/Dockstore.cwl
                     run:
                         class: Workflow
                         inputs:

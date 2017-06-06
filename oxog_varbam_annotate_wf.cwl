@@ -263,12 +263,6 @@ steps:
             tumour_record:
                 source: tumours
             normalMinibam: run_variant_bam_normal/minibam
-            # tumourMinibamToUse:
-            #     default: ""
-            # snvsToUse:
-            #     default: []
-            # indelsToUse:
-            #     default: []
         out:
             [annotated_vcfs]
         scatter: [tumour_record]
