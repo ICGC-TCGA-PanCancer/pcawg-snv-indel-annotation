@@ -71,9 +71,7 @@ function createArrayOfFilesForOxoG(in_data, vcfsForOxoG, extractedSnvs) {
 function chooseINDELsForAnnotator(oxogVCFs, tumours_list)
 {
 	var vcfsToUse = [];
-	//return inputs.oxogVCFs[0]
 	var flattened_oxogs = flatten_nested_arrays(oxogVCFs);
-
 	var associated_indels = tumours_list.associatedVcfs.filter( function(item)
 		{
 			return item.indexOf("indel") !== -1;

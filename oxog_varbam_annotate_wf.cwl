@@ -260,7 +260,7 @@ steps:
         in:
             tumourMinibams: run_variant_bam/minibam
             oxogVCFs: flatten_oxog_output/oxogVCFs
-            tumours_list:
+            tumour_record:
                 source: tumours
             normalMinibam: run_variant_bam_normal/minibam
             # tumourMinibamToUse:
@@ -271,7 +271,7 @@ steps:
             #     default: []
         out:
             [annotated_vcfs]
-        scatter: [tumours_list]
+        scatter: [tumour_record]
         run: annotator_sub_wf.cwl
 
 
