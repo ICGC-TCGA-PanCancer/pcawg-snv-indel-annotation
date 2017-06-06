@@ -5,7 +5,7 @@ class: Workflow
 
 doc: |
     This workflow will run OxoG, variantbam, and annotate.
-    Run this as: `dockstore --script --debug workflow launch --descriptor cwl --local-entry --entry ./oxog_varbam_annotate_wf.cwl --json oxog_varbam_annotat_wf.input.json `
+    Run this as `dockstore --script --debug workflow launch --descriptor cwl --local-entry --entry ./oxog_varbam_annotate_wf.cwl --json oxog_varbam_annotat_wf.input.json `
 
 dct:creator:
     foaf:name: "Solomon Shorser"
@@ -59,10 +59,6 @@ inputs:
         items: "TumourType.yaml#TumourType"
 
 outputs:
-    # preprocessed_files_merged:
-    #     type: File[]
-    #     outputSource: preprocess_vcfs/preprocessedFiles
-    #     valueFrom: mergedVcfs
     oxog_filtered_files:
         type: File[]
         outputSource: flatten_oxog_output/oxogVCFs
@@ -73,13 +69,6 @@ outputs:
     annotated_files:
         type: File[]
         outputSource: flatten_annotator_output/annotated_vcfs
-    # normalMinibam:
-    #     type: File
-    #     outputSource: run_variant_bam_normal/minibam
-    # blah:
-    #   type: File[]
-    #     outputSource: filter_merged_sv/merged_sv_vcf
-
 
 steps:
     #preprocess the VCFs
@@ -129,10 +118,6 @@ steps:
             expression: |
                 $( { extracted_snvs:  inputs.in_record.extractedSnvs } )
         out: [extracted_snvs]
-    # The filter_merged_* steps may need to be rewritten to handle multi-tumour situations.
-    #
-    # Need some ExpressionTool steps to get the specific names of merged VCFs to
-    # feed into variantbam.
 
     filter_merged_snv:
         in:
@@ -174,25 +159,6 @@ steps:
                 $({ merged_sv_vcf: filterFileArray("sv",inputs.in_vcfs) })
         out: [merged_sv_vcf]
 
-    # Create minibam for normal BAM. It would be nice to figure out how to get this into
-    # the main run_variant_bam step that currently only does tumour BAMs.
-    run_variant_bam_normal:
-        in:
-            indel-padding: indel-padding
-            snv-padding: snv-padding
-            sv-padding: sv-padding
-            input-snv: filter_merged_snv/merged_snv_vcf
-            input-sv: filter_merged_sv/merged_sv_vcf
-            input-indel: filter_merged_indel/merged_indel_vcf
-            inputFileDirectory: inputFileDirectory
-            input-bam: normalBam
-            outfile:
-                type: string
-                source: normalBam
-                valueFrom: $("mini-".concat(self.basename))
-        run: Variantbam-for-dockstore/variantbam.cwl
-        out: [minibam]
-
     # Do variantbam
     # This needs to be run for each tumour, using VCFs that are merged pipelines per tumour.
     run_variant_bam:
@@ -206,60 +172,28 @@ steps:
             input-sv: filter_merged_sv/merged_sv_vcf
             input-indel: filter_merged_indel/merged_indel_vcf
             inputFileDirectory: inputFileDirectory
-            input-bam:
-                default: ""
-            outfile:
-                default: ""
         out: [minibam]
         scatter: [in_data]
-        run:
-            class: Workflow
-            outputs:
-                minibam:
-                    outputSource: sub_run_var_bam/minibam
-                    type: File
-            inputs:
-                inputFileDirectory:
-                    type: Directory
-                in_data:
-                    type: "TumourType.yaml#TumourType"
-                indel-padding:
-                    type: string
-                snv-padding:
-                    type: string
-                sv-padding:
-                    type: string
-                input-indel:
-                    type: File
-                input-snv:
-                    type: File
-                input-sv:
-                    type: File
-                input-bam:
-                    type: File
-                    valueFrom: |
-                        $(
-                            {
-                                "class":"File",
-                                "location": inputs.inputFileDirectory.location + "/" + inputs.in_data.bamFileName
-                            }
-                        )
-                outfile:
-                    type: string
-                    valueFrom: $("mini-".concat(inputs.in_data.tumourId).concat(".bam"))
-            steps:
-                sub_run_var_bam:
-                    run: Variantbam-for-dockstore/variantbam.cwl
-                    in:
-                        input-bam: input-bam
-                        outfile: outfile
-                        snv-padding: snv-padding
-                        sv-padding: sv-padding
-                        indel-padding: indel-padding
-                        input-snv: input-snv
-                        input-sv: input-sv
-                        input-indel: input-indel
-                    out: [minibam]
+        run: ./minibam_sub_wf.cwl
+
+    # Create minibam for normal BAM. It would be nice to figure out how to get this into
+    # the main run_variant_bam step that currently only does tumour BAMs.
+    run_variant_bam_normal:
+        in:
+            indel-padding: indel-padding
+            snv-padding: snv-padding
+            sv-padding: sv-padding
+            input-snv: filter_merged_snv/merged_snv_vcf
+            input-sv: filter_merged_sv/merged_sv_vcf
+            input-indel: filter_merged_indel/merged_indel_vcf
+            inputFileDirectory: inputFileDirectory
+            input-bam: normalBam
+            outfile:
+                #type: string
+                source: normalBam
+                valueFrom: $("mini-".concat(self.basename))
+        run: Variantbam-for-dockstore/variantbam.cwl
+        out: [minibam]
 
     #Gather all minibams into a single output array.
     gather_minibams:
@@ -281,7 +215,7 @@ steps:
         in:
             vcf:
                 source: get_cleaned_vcfs/cleaned_vcfs
-                type: File[]
+                #type: File[]
         scatter: [vcf]
         out: [zipped_file]
         run: zip_and_index_vcf.cwl
@@ -294,94 +228,14 @@ steps:
             in_data:
                 source: tumours
             inputFileDirectory: inputFileDirectory
-            tumourBamFilename:
-                default: ""
             refDataDir: refDataDir
             oxoQScore: oxoQScore
             # Need to get VCFs for this tumour. Need an array made of the outputs of earlier VCF pre-processing steps, filtered by tumourID
-            vcfNames:
-                default: []
-            tumourID:
-                default: ""
             vcfsForOxoG: zip_and_index_files_for_oxog/zipped_file
             extractedSnvs: get_extracted_snvs/extracted_snvs
         out: [oxogVCF]
         scatter: [in_data]
-        run:
-            class: Workflow
-            outputs:
-                oxogVCF:
-                    outputSource: sub_run_oxog/oxogVCF
-                    type: File[]
-            inputs:
-                vcfsForOxoG:
-                    type: File[]
-                extractedSnvs:
-                    type: File[]
-                inputFileDirectory:
-                    type: Directory
-                in_data:
-                    type: "TumourType.yaml#TumourType"
-                tumourBamFilename:
-                    type: File
-                    valueFrom: |
-                        $(
-                            {
-                                "class":"File",
-                                "location": inputs.inputFileDirectory.location + "/" + inputs.in_data.bamFileName
-                            }
-                        )
-                refDataDir:
-                    type: Directory
-                oxoQScore:
-                    type: string
-                # Need to get VCFs for this tumour. Need an array made of the outputs of earlier VCF pre-processing steps, filtered by tumourID
-                vcfNames:
-                    type: File[]
-                    valueFrom: |
-                        ${
-                            var vcfsToUse = []
-                            // Need to search through vcfsForOxoG (cleaned VCFs that have been zipped and index) and preprocess_vcfs/extractedSNVs to find VCFs
-                            // that match the names of those in in_data.inputs.associatedVCFs
-                            //
-                            var associatedVcfs = inputs.in_data.associatedVcfs
-                            for ( var i in associatedVcfs )
-                            {
-                                if ( associatedVcfs[i].indexOf(".snv") !== -1 )
-                                {
-                                    for ( var j in inputs.vcfsForOxoG )
-                                    {
-                                        if ( inputs.vcfsForOxoG[j].basename.indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 && /.*\.gz$/.test(inputs.vcfsForOxoG[j].basename))
-                                        {
-                                            vcfsToUse.push (  inputs.vcfsForOxoG[j]    )
-                                        }
-                                    }
-                                    // for ( var j in inputs.extractedSnvs )
-                                    // {
-                                    //     if ( inputs.extractedSnvs[j].basename.replace(".pass-filtered.cleaned.vcf.normalized.extracted-SNVs.vcf.gz","").indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 && /.*\.gz$/.test(inputs.extractedSnvs[j].basename))
-                                    //     {
-                                    //         vcfsToUse.push (  inputs.extractedSnvs[j]    )
-                                    //     }
-                                    // }
-                                }
-                                vcfsToUse.concat(inputs.extractedSnvs)
-                            }
-                            return vcfsToUse
-                        }
-                tumourID:
-                    valueFrom: $(inputs.in_data.tumourId)
-                    type: string
-            steps:
-                sub_run_oxog:
-                    run: oxog.cwl
-                    in:
-                        inputFileDirectory: inputFileDirectory
-                        tumourBamFilename: tumourBamFilename
-                        refDataDir: refDataDir
-                        oxoQScore: oxoQScore
-                        vcfNames: vcfNames
-                        tumourID: tumourID
-                    out: [oxogVCF]
+        run: oxog_sub_wf.cwl
 
     flatten_oxog_output:
         in:
@@ -406,126 +260,14 @@ steps:
         in:
             tumourMinibams: run_variant_bam/minibam
             oxogVCFs: flatten_oxog_output/oxogVCFs
-            tumours_list:
+            tumour_record:
                 source: tumours
             normalMinibam: run_variant_bam_normal/minibam
-            tumourMinibamToUse:
-                default: ""
-            snvsToUse:
-                default: []
-            indelsToUse:
-                default: []
         out:
             [annotated_vcfs]
-        scatter: [tumours_list]
-        run:
-            class: Workflow
-            inputs:
-                tumours_list:
-                    type: "TumourType.yaml#TumourType"
-                tumourMinibams:
-                    type: File[]
-                tumourMinibamToUse:
-                    type: File
-                    valueFrom: |
-                        ${
-                            // var minibamToUse
-                            for (var j in inputs.tumourMinibams )
-                            {
-                                // The minibam should be named the same as the regular bam, except for the "mini-" prefix.
-                                // This condition should only ever be satisfied once.
-                                if (inputs.tumourMinibams[j].basename.indexOf( inputs.tumours_list.bamFileName ) !== -1 )
-                                {
-                                    return inputs.tumourMinibams[j]
-                                }
-                            }
-                            //return minibamToUse
-                            return undefined
-                        }
-                oxogVCFs:
-                    type: File[]
-                indelsToUse:
-                    type: File[]
-                    valueFrom: |
-                        $( getListOfVcfsForAnnotator(inputs) )
-                snvsToUse:
-                    type: File[]
-                    valueFrom: |
-                        ${
-                            var vcfsToUse = []
-                            var flattened_oxogs = flatten_nested_arrays(inputs.oxogVCFs)
-                            var associated_snvs = inputs.tumours_list.associatedVcfs.filter( function(item)
-                                {
-                                    return item.indexOf("snv") !== -1
-                                }
-                            )
-                            for (var i in associated_snvs)
-                            {
-                                for (var j in flattened_oxogs)
-                                {
-                                    //if ( flattened_oxogs[j].basename.indexOf(associated_snvs[i].replace(".vcf.gz","")) !== -1 )
-                                    {
-                                        vcfsToUse.push(flattened_oxogs[j])
-                                    }
-                                }
-                            }
-                            return vcfsToUse
-                        }
-                tumours_list:
-                    type: "TumourType.yaml#TumourType"
-                normalMinibam:
-                    type: File
-            outputs:
-                annotated_vcfs:
-                    type: File[]
-                    outputSource: gather_annotated_vcfs/annotated_vcfs
-            steps:
-                # This subworkflow step will annotate ALL INDELs for a specific tumour
-                # needs to scatter over indelsToUse
-                annotate_indels:
-                    in:
-                        variant_type:
-                            valueFrom: "INDEL"
-                        input_vcf: indelsToUse
-                        normal_bam: normalMinibam
-                        tumour_bam: tumourMinibamToUse
-                        output:
-                            valueFrom: $(inputs.input_vcf.basename.replace(".vcf","_annotated.vcf"))
-                    scatter: [input_vcf]
-                    out:
-                        [annotated_vcf]
-                    run: sga-annotate-docker/Dockstore.cwl
-                # This subworkflow step will annotate ALL SNVs for a specific tumour
-                # needs to scatter over snvsToUse
-                annotate_snvs:
-                    in:
-                        variant_type:
-                            valueFrom: "SNV"
-                        input_vcf: snvsToUse
-                        normal_bam: normalMinibam
-                        tumour_bam: tumourMinibamToUse
-                        output:
-                            valueFrom: $(inputs.input_vcf.basename.replace(".vcf","_annotated.vcf"))
-                    scatter: [input_vcf]
-                    out:
-                        [annotated_vcf]
-                    run: sga-annotate-docker/Dockstore.cwl
+        scatter: [tumour_record]
+        run: annotator_sub_wf.cwl
 
-                gather_annotated_vcfs:
-                    in:
-                        annotated_indels: annotate_indels/annotated_vcf
-                        annotated_snvs: annotate_snvs/annotated_vcf
-                    run:
-                        class: ExpressionTool
-                        inputs:
-                            annotated_indels: File[]
-                            annotated_snvs: File[]
-                        outputs:
-                            annotated_vcfs: File[]
-                        expression: |
-                            $({ annotated_vcfs: inputs.annotated_indels.concat(inputs.annotated_snvs) })
-                    out:
-                        [annotated_vcfs]
 
 
     flatten_annotator_output:

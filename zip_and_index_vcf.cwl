@@ -1,8 +1,8 @@
 #!/usr/bin/env cwl-runner
-
 cwlVersion: v1.0
-
 class: Workflow
+doc: |
+    This is a very simple workflow of two steps. It will zip an input VCF file and then index it. The zipped file and the index file will be in the workflow output.
 
 requirements:
     - class: InlineJavascriptRequirement
@@ -56,7 +56,7 @@ steps:
             inputs:
                 zipped_file:
                     type: File
-            arguments: [$(runtime.outdir + "/" + inputs.zipped_file.basename)]
+            arguments: [ $( runtime.outdir + "/" + inputs.zipped_file.basename ) ]
             outputs:
                 indexed_file:
                     type: File

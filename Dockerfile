@@ -3,20 +3,21 @@ LABEL MAINTAINER solomon.shorser@oicr.on.ca
 RUN mkdir -p /opt/gitroot
 
 RUN apt-get update
-#RUN apt list upgradable
-#RUN apt-get upgrade -y
-
-RUN apt-get install -y apt-utils git tabix
+RUN apt-get install -y apt-utils
+RUN apt-get install -y pkg-config
+RUN apt-get install -y git
+RUN apt-get install -y tabix
+RUN apt-get install -y bash=4.3-14ubuntu1.2
+RUN apt-get install -y gcc
+RUN apt-get install -y make
+RUN apt-get install -y zlib1g-dev
+RUN apt-get install -y libstring-random-perl
+RUN apt-get install -y dh-autoreconf
 
 # Install bcftools - this is used for normalizing VCFs
-
 RUN cd /opt/gitroot && git clone https://github.com/samtools/htslib.git
-
 RUN cd /opt/gitroot && git clone https://github.com/samtools/bcftools.git
-
 RUN cd /opt/gitroot && git clone https://github.com/vcftools/vcftools.git
-
-RUN apt-get install -y gcc make zlib1g-dev libstring-random-perl
 
 RUN cd /opt/gitroot/htslib \
 	&& git checkout 1.3.1 \
@@ -27,8 +28,6 @@ RUN cd /opt/gitroot/bcftools \
 	&& make && make install
 
 # Instal VCFTools - this is used for vcf-sort in the vcf_merge_by_type.pl script
-RUN apt-get install pkg-config dh-autoreconf -y
-
 RUN cd /opt/gitroot/vcftools \
 	&& git checkout v0.1.14 \
 	&& ./autogen.sh && ./configure && make && make install

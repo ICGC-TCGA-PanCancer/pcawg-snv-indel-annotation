@@ -4,7 +4,7 @@ class: CommandLineTool
 id: "merge_vcfs"
 label: "merge_vcfs"
 
-description: |
+doc: |
     This tool will merge VCFs by type (SV, SNV, INDEL). This CWL wrapper was written by Solomon Shorser.
     The Perl script was originaly written by Brian O'Connor and maintained by Solomon Shorser.
 

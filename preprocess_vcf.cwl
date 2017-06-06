@@ -41,18 +41,6 @@ outputs:
         type: "PreprocessedFilesType.yaml#PreprocessedFileset"
         outputSource: populate_output_record/output_record
 
-    # mergedVCFs:
-    #   type: File[]
-    #   outputSource: merge_vcfs/output
-    # normalizedVCFs:
-    #   type: File[]
-    #   outputSource: normalize/normalized-vcf
-    # extractedSNVs:
-    #   type: File[]
-    #   outputSource: extract_snv/extracted_snvs
-
-
-
 steps:
     pass_filter:
       run: pass-filter.cwl
