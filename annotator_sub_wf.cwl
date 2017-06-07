@@ -32,7 +32,8 @@ inputs:
 outputs:
     annotated_vcfs:
         type: File[]
-        # outputSource: flatten_annotated_vcfs/flattened_annotated_vcfs_array
+        # type: { items: { type: array, items: File } , type: array}
+        #outputSource: flatten_annotated_vcfs/flattened_annotated_vcfs_array
         outputSource: annotator_sub_workflow/annotated_vcf
 steps:
     annotator_sub_workflow:
@@ -90,9 +91,8 @@ steps:
                             source: [vcfsToAnnotate]
                             valueFrom: $( self.basename.replace(".vcf","_annotated.vcf") )
                     out:
-                        [annotated_vcf]
+                        [ annotated_vcf ]
                     run: sga-annotate-docker/Dockstore.cwl
-
 
     # flatten_annotated_vcfs:
     #     in:
@@ -110,3 +110,18 @@ steps:
     #             )
     #     out:
     #         [flattened_annotated_vcfs_array]
+
+    # flatten_oxog_output:
+    #     in:
+    #         array_of_arrays: run_oxog/oxogVCF
+    #     run:
+    #         class: ExpressionTool
+    #         inputs:
+    #             array_of_arrays:
+    #                 type: { type: array, items: { type: array, items: File } }
+    #         expression: |
+    #             $({ oxogVCFs: flatten_nested_arrays(inputs.array_of_arrays[0]) })
+    #         outputs:
+    #             oxogVCFs: File[]
+    #     out:
+    #         [oxogVCFs]

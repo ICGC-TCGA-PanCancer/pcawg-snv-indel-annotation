@@ -280,7 +280,7 @@ steps:
             variantType:
                 default: "SNV"
         out:
-            [annotated_vcfs]
+            [ annotated_vcfs ]
         scatter: [tumour_record]
         run: annotator_sub_wf.cwl
     # Annotation must also be performed on INDELs but since INDELs don't get OxoG-filtered,
@@ -321,12 +321,16 @@ steps:
         run:
             class: ExpressionTool
             inputs:
-                annotated_snvs: File[]
-                annotated_indels: File[]
+                annotated_snvs:
+                    type: { type: array, items: { type: array, items: File } }
+                annotated_indels:
+                    type: { type: array, items: { type: array, items: File } }
             outputs:
                 annotated_vcfs: File[]
             expression: |
-                $( { annotated_vcfs: inputs.annotated_snvs.concat(inputs.annotated_indels) } )
+                $(
+                    { annotated_vcfs: flatten_nested_arrays(inputs.annotated_snvs).concat(flatten_nested_arrays(inputs.annotated_indels)) }
+                )
         out:
             [annotated_vcfs]
 
