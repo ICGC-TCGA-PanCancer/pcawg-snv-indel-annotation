@@ -68,7 +68,7 @@ outputs:
         secondaryFiles: "*.bai"
     annotated_files:
         type: File[]
-        outputSource: flatten_annotator_output/annotated_vcfs
+        outputSource: gather_annotated_vcfs/annotated_vcfs
 
 steps:
     #preprocess the VCFs
@@ -105,6 +105,20 @@ steps:
             expression: |
                 $( { cleaned_vcfs:  inputs.in_record.cleanedVcfs } )
         out: [cleaned_vcfs]
+
+    get_normalized_vcfs:
+        in:
+            in_record: preprocess_vcfs/preprocessedFiles
+        run:
+            class: ExpressionTool
+            inputs:
+                in_record: "PreprocessedFilesType.yaml#PreprocessedFileset"
+            outputs:
+                normalized_vcfs: File[]
+            expression: |
+                $( { normalized_vcfs:  inputs.in_record.normalizedVcfs } )
+        out: [normalized_vcfs]
+
 
     get_extracted_snvs:
         in:
@@ -252,36 +266,68 @@ steps:
         out:
             [oxogVCFs]
 
-    # Do Annotation. This will probably need some intermediate steps...
+    # Do Annotation.
     # we need OxoG filtered files, and minibams (tumour and normal).
     # Then we need to scatter. We can scatter on minibams, and perform all annotations
     # for each minibam at a time.
-    run_annotator:
+    run_annotator_snvs:
         in:
             tumourMinibams: run_variant_bam/minibam
-            oxogVCFs: flatten_oxog_output/oxogVCFs
+            VCFs: flatten_oxog_output/oxogVCFs
             tumour_record:
                 source: tumours
             normalMinibam: run_variant_bam_normal/minibam
+            variantType:
+                default: "SNV"
+        out:
+            [annotated_vcfs]
+        scatter: [tumour_record]
+        run: annotator_sub_wf.cwl
+    # Annotation must also be performed on INDELs but since INDELs don't get OxoG-filtered,
+    # we will use the normalized INDELs.
+    run_annotator_indels:
+        in:
+            tumourMinibams: run_variant_bam/minibam
+            VCFs: get_normalized_vcfs/normalized_vcfs
+            tumour_record:
+                source: tumours
+            normalMinibam: run_variant_bam_normal/minibam
+            variantType:
+                default: "INDEL"
         out:
             [annotated_vcfs]
         scatter: [tumour_record]
         run: annotator_sub_wf.cwl
 
+    # flatten_annotator_output:
+    #     in:
+    #         array_of_arrays: run_annotator/annotated_vcfs
+    #     run:
+    #         class: ExpressionTool
+    #         inputs:
+    #             array_of_arrays:
+    #                 type: { type: array, items: { type: array, items: File } }
+    #         expression: |
+    #             $({ annotated_vcfs: flatten_nested_arrays(inputs.array_of_arrays) })
+    #         outputs:
+    #             annotated_vcfs: File[]
+    #     out:
+    #         [annotated_vcfs]
 
-
-    flatten_annotator_output:
+    gather_annotated_vcfs:
         in:
-            array_of_arrays: run_annotator/annotated_vcfs
+            annotated_snvs: run_annotator_snvs/annotated_vcfs
+            annotated_indels: run_annotator_indels/annotated_vcfs
         run:
             class: ExpressionTool
             inputs:
-                array_of_arrays:
-                    type: { type: array, items: { type: array, items: File } }
-            expression: |
-                $({ annotated_vcfs: flatten_nested_arrays(inputs.array_of_arrays) })
+                annotated_snvs: File[]
+                annotated_indels: File[]
             outputs:
                 annotated_vcfs: File[]
+            expression: |
+                $( { annotated_vcfs: inputs.annotated_snvs.concat(inputs.annotated_indels) } )
         out:
             [annotated_vcfs]
+
     # Do consensus-calling.

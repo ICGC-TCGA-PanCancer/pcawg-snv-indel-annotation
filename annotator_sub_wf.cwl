@@ -23,159 +23,90 @@ inputs:
         type: "TumourType.yaml#TumourType"
     tumourMinibams:
         type: File[]
-    oxogVCFs:
+    VCFs:
         type: File[]
     normalMinibam:
         type: File
+    variantType:
+        type: string
 outputs:
     annotated_vcfs:
         type: File[]
-        outputSource: annotator_sub_workflow/annotated_vcfs
+        # outputSource: flatten_annotated_vcfs/flattened_annotated_vcfs_array
+        outputSource: annotator_sub_workflow/annotated_vcf
 steps:
     annotator_sub_workflow:
         in:
             tumour_record: tumour_record
             tumourMinibams: tumourMinibams
-            oxogVCFs: oxogVCFs
+            tumour_bam:
+                source: [tumourMinibams, tumour_record]
+                valueFrom: |
+                    ${
+                        return chooseMiniBamForAnnotator(self[0], self[1])
+                    }
+            variantType: variantType
+            VCFs: VCFs
             normalMinibam: normalMinibam
-            indelsToAnnotate:
-                source: [oxogVCFs, tumour_record]
+            vcfsToAnnotate:
+                source: [VCFs, tumour_record]
                 valueFrom: |
                     ${
-                        return chooseINDELsForAnnotator(self[0], self[1])
+                        return chooseVCFsForAnnotator(self[0], self[1])
                     }
-            snvsToAnnotate:
-                source: [oxogVCFs, tumour_record]
-                valueFrom: |
-                    ${
-                        return chooseSNVsForAnnotator(self[0], self[1])
-                    }
+        scatter:
+            [vcfsToAnnotate]
         out:
-            [annotated_vcfs]
+            [annotated_vcf]
         run:
             class: Workflow
             inputs:
                 tumour_record:
                     type: "TumourType.yaml#TumourType"
-                tumourMinibams:
-                    type: File[]
-                oxogVCFs:
-                    type: File[]
+                tumour_bam:
+                    type: File
                 normalMinibam:
                     type: File
-                indelsToAnnotate:
-                    type: File[]
-                snvsToAnnotate:
-                    type: File[]
+                vcfsToAnnotate:
+                    type: File
+                variantType:
+                    type: string
+                tumour_bam:
+                    type: File
+                normalMinibam:
+                    type: File
             outputs:
-                annotated_vcfs:
-                    type: File[]
-                    outputSource: gather_annotated_vcfs/annotated_vcfs
+                annotated_vcf:
+                    type: File
+                    outputSource: annotator_sub_sub_workflow/annotated_vcf
             steps:
-                # This subworkflow step will annotate ALL INDELs for a specific tumour
-                # needs to scatter over indelsToUse
-                annotate_indels:
+                annotator_sub_sub_workflow:
                     in:
-                        variant_type:
-                            valueFrom: "INDEL"
-                        input_vcf: indelsToAnnotate
+                        variant_type: variantType
+                        input_vcf: vcfsToAnnotate
                         normal_bam: normalMinibam
-                        tumour_bam:
-                            source: [tumourMinibams, tumour_record]
-                            valueFrom: |
-                                ${
-                                    return chooseMiniBamsForAnnotator(self[0], self[1])
-                                }
-                    scatter: [input_vcf]
+                        tumour_bam: tumour_bam
+                        output:
+                            source: [vcfsToAnnotate]
+                            valueFrom: $( self.basename.replace(".vcf","_annotated.vcf") )
                     out:
                         [annotated_vcf]
-                    run:
-                        class: Workflow
-                        inputs:
-                            variant_type:
-                                type: string
-                            input_vcf:
-                                type: File
-                            normal_bam:
-                                type: File
-                            tumour_bam:
-                                type: File
-                        steps:
-                            sub_annotate_indels:
-                                in:
-                                    variant_type: variant_type
-                                    input_vcf: input_vcf
-                                    normal_bam: normal_bam
-                                    tumour_bam: tumour_bam
-                                    output:
-                                        source: [input_vcf]
-                                        valueFrom: $( self.basename.replace(".vcf","_annotated.vcf") )
-                                out:
-                                    [annotated_vcf]
-                                run: sga-annotate-docker/Dockstore.cwl
-                        outputs:
-                            annotated_vcf:
-                                type: File
-                                outputSource: sub_annotate_indels/annotated_vcf
+                    run: sga-annotate-docker/Dockstore.cwl
 
-                # This subworkflow step will annotate ALL SNVs for a specific tumour
-                # needs to scatter over snvsToUse
-                annotate_snvs:
-                    in:
-                        variant_type:
-                            valueFrom: "SNV"
-                        input_vcf: snvsToAnnotate
-                        normal_bam: normalMinibam
-                        tumour_bam:
-                            source: [tumourMinibams, tumour_record]
-                            valueFrom: |
-                                ${
-                                    return chooseMiniBamsForAnnotator(self[0], self[1])
-                                }
-                    scatter: [input_vcf]
-                    out:
-                        [annotated_vcf]
-                    run:
-                        class: Workflow
-                        inputs:
-                            variant_type:
-                                type: string
-                            input_vcf:
-                                type: File
-                            normal_bam:
-                                type: File
-                            tumour_bam:
-                                type: File
-                        steps:
-                            sub_annotate_snvs:
-                                in:
-                                    variant_type: variant_type
-                                    input_vcf: input_vcf
-                                    normal_bam: normal_bam
-                                    tumour_bam: tumour_bam
-                                    output:
-                                        source: [input_vcf]
-                                        valueFrom: $( self.basename.replace(".vcf","_annotated.vcf") )
-                                out:
-                                    [annotated_vcf]
-                                run: sga-annotate-docker/Dockstore.cwl
-                        outputs:
-                            annotated_vcf:
-                                type: File
-                                outputSource: sub_annotate_snvs/annotated_vcf
 
-                gather_annotated_vcfs:
-                    in:
-                        annotated_indels: annotate_indels/annotated_vcf
-                        annotated_snvs: annotate_snvs/annotated_vcf
-                    run:
-                        class: ExpressionTool
-                        inputs:
-                            annotated_indels: File[]
-                            annotated_snvs: File[]
-                        outputs:
-                            annotated_vcfs: File[]
-                        expression: |
-                            $( { annotated_vcfs: inputs.annotated_indels.concat(inputs.annotated_snvs) } )
-                    out:
-                        [annotated_vcfs]
+    # flatten_annotated_vcfs:
+    #     in:
+    #         array_of_arrays: annotator_sub_workflow/annotated_vcf
+    #     run:
+    #         class: ExpressionTool
+    #         inputs:
+    #             array_of_arrays:
+    #                 type:  { type: array, items: { type: array, items: File } }
+    #         outputs:
+    #             flattened_annotated_vcfs_array: File[]
+    #         expression: |
+    #             $(
+    #                 { flattened_annotated_vcfs_array: flatten_nested_arrays(inputs.array_of_arrays[0]) }
+    #             )
+    #     out:
+    #         [flattened_annotated_vcfs_array]

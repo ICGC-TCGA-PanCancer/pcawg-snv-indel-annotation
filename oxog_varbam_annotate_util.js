@@ -89,7 +89,30 @@ function chooseINDELsForAnnotator(oxogVCFs, tumours_list)
 	return vcfsToUse;
 }
 
-function chooseMiniBamsForAnnotator(tumourMinibams, tumours_list)
+function chooseVCFsForAnnotator(VCFs, tumour_record)
+{
+	var vcfsToUse = [];
+	//this might be a nested array if it came from the OxoG output.
+	var flattened_array = flatten_nested_arrays(VCFs);
+	// var associated_vcfs = tumours_list.associatedVcfs.filter( function(item)
+	// 	{
+	// 		return item.indexOf("indel") !== -1;
+	// 	});
+	var associated_vcfs = tumour_record.associatedVcfs
+	for (var i in associated_vcfs)
+	{
+		for (var j in flattened_array)
+		{
+			if ( flattened_array[j].basename.indexOf(associated_vcfs[i].replace(".vcf.gz","")) !== -1 )
+			{
+				vcfsToUse.push(flattened_array[j]);
+			}
+		}
+	}
+	return vcfsToUse;
+}
+
+function chooseMiniBamForAnnotator(tumourMinibams, tumours_list)
 {
 	// var minibamToUse
 	for (var j in tumourMinibams )
