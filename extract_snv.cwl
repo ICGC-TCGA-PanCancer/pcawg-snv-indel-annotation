@@ -23,7 +23,7 @@ inputs:
 
 outputs:
     extracted_snvs:
-      type: File
+      type: File?
       outputBinding:
         glob: "*.extracted-SNVs.vcf.gz"
 
