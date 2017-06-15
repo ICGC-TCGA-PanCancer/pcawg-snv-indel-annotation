@@ -85,34 +85,13 @@ steps:
       out: [ extracted_snvs ]
 
     # Remove "null" elements from the array.
-    # clean_extracted_snvs:
-    #   in:
-    #     extracted_snvs:
-    #       source: extract_snv/extracted_snvs
-    #       valueFrom: |
-    #         $(
-    #             self.filter(function(n){return n != null})
-    #         )
-    #   run:
-    #       class: ExpressionTool
-    #       inputs:
-    #           extracted_snvs: File[]
-    #       outputs:
-    #           cleaned_extracted_snvs: File[]
-    #       expression: |
-    #         $(
-    #             { cleaned_extracted_snvs: inputs.extracted_snvs }
-    #         )
-    #   out: [cleaned_extracted_snvs]
-
-    clean_extracted_snvs:
+    null_filter_extracted_snvs:
       in:
         extracted_snvs:
           source: extract_snv/extracted_snvs
       run:
           class: ExpressionTool
           inputs:
-            #   extracted_snvs: { type: array, items: ["null", File] }
               extracted_snvs:
                   type:
                       type: array
@@ -125,17 +104,6 @@ steps:
             )
       out: [cleaned_extracted_snvs]
 
-    #   run:
-    #       class: ExpressionTool
-    #       inputs:
-    #           extracted_snvs: File[]
-    #       outputs:
-    #           cleaned_extracted_snvs: File[]
-    #       expression: |
-    #         $(
-    #             { cleaned_extracted_snvs: extracted_snvs.filter(function(n){return n != null}) }
-    #         )
-
     #############################################
     # Gather SNVs on a per-workflow basis
     #############################################
@@ -145,7 +113,7 @@ steps:
         clean_vcfs:
             source: clean/clean_vcf
         extracted_snvs:
-            source: clean_extracted_snvs/cleaned_extracted_snvs
+            source: null_filter_extracted_snvs/cleaned_extracted_snvs
       out: [snvs_for_merge]
       run:
         class: ExpressionTool
@@ -165,7 +133,7 @@ steps:
         clean_vcfs:
             source: clean/clean_vcf
         extracted_snvs:
-            source: clean_extracted_snvs/cleaned_extracted_snvs
+            source: null_filter_extracted_snvs/cleaned_extracted_snvs
       out: [snvs_for_merge]
       run:
         class: ExpressionTool
@@ -185,7 +153,7 @@ steps:
         clean_vcfs:
             source: clean/clean_vcf
         extracted_snvs:
-            source: clean_extracted_snvs/cleaned_extracted_snvs
+            source: null_filter_extracted_snvs/cleaned_extracted_snvs
       out: [snvs_for_merge]
       run:
         class: ExpressionTool
@@ -205,7 +173,7 @@ steps:
         clean_vcfs:
             source: clean/clean_vcf
         extracted_snvs:
-            source: clean_extracted_snvs/cleaned_extracted_snvs
+            source: null_filter_extracted_snvs/cleaned_extracted_snvs
       out: [snvs_for_merge]
       run:
         class: ExpressionTool
@@ -359,7 +327,7 @@ steps:
     populate_output_record:
         in:
             mergedVcfs : merge_vcfs/output
-            extractedSnvs : clean_extracted_snvs/cleaned_extracted_snvs
+            extractedSnvs : null_filter_extracted_snvs/cleaned_extracted_snvs
             normalizedVcfs: normalize/normalized-vcf
             cleanedVcfs: clean/clean_vcf
         out:
