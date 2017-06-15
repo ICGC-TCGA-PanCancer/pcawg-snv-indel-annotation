@@ -38,8 +38,8 @@ outputs:
 steps:
     annotator_sub_workflow:
         in:
-            tumour_record: tumour_record
-            tumourMinibams: tumourMinibams
+            # tumour_record: tumour_record
+            # tumourMinibams: tumourMinibams
             tumour_bam:
                 source: [tumourMinibams, tumour_record]
                 valueFrom: |
@@ -47,13 +47,13 @@ steps:
                         return chooseMiniBamForAnnotator(self[0], self[1])
                     }
             variantType: variantType
-            VCFs: VCFs
+            # VCFs: VCFs
             normalMinibam: normalMinibam
             vcfsToAnnotate:
-                source: [VCFs, tumour_record]
+                source: [tumour_record, VCFs]
                 valueFrom: |
                     ${
-                        return chooseVCFsForAnnotator(self[0], self[1])
+                        return chooseVCFsForAnnotator(self[1], self[0].associatedVcfs )
                     }
         scatter:
             [vcfsToAnnotate]
@@ -62,8 +62,8 @@ steps:
         run:
             class: Workflow
             inputs:
-                tumour_record:
-                    type: "TumourType.yaml#TumourType"
+                # tumour_record:
+                #     type: "TumourType.yaml#TumourType"
                 tumour_bam:
                     type: File
                 normalMinibam:

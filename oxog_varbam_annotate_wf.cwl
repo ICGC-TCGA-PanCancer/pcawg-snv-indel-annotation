@@ -59,16 +59,21 @@ inputs:
         items: "TumourType.yaml#TumourType"
 
 outputs:
+    # raw_oxog_filtered_files:
+    #     type: { type: array, items: { type: array, items: File } }
+    #     outputSource: run_oxog/oxogVCF
+    #     secondaryFiles: "*.tbi"
     oxog_filtered_files:
         type: File[]
         outputSource: flatten_oxog_output/oxogVCFs
-    minibams:
-        type: File[]
-        outputSource: gather_minibams/minibams
-        secondaryFiles: "*.bai"
-    annotated_files:
-        type: File[]
-        outputSource: gather_annotated_vcfs/annotated_vcfs
+        secondaryFiles: "*.tbi"
+    # minibams:
+    #     type: File[]
+    #     outputSource: gather_minibams/minibams
+    #     secondaryFiles: "*.bai"
+    # annotated_files:
+    #     type: File[]
+    #     outputSource: gather_annotated_vcfs/annotated_vcfs
 
 steps:
     #preprocess the VCFs
@@ -128,7 +133,7 @@ steps:
             inputs:
                 in_record: "PreprocessedFilesType.yaml#PreprocessedFileset"
             outputs:
-                extracted_snvs: File[]
+                extracted_snvs: File[]?
             expression: |
                 $( { extracted_snvs:  inputs.in_record.extractedSnvs } )
         out: [extracted_snvs]
@@ -173,66 +178,85 @@ steps:
                 $({ merged_sv_vcf: filterFileArray("sv",inputs.in_vcfs) })
         out: [merged_sv_vcf]
 
-    # Do variantbam
-    # This needs to be run for each tumour, using VCFs that are merged pipelines per tumour.
-    run_variant_bam:
-        in:
-            in_data:
-                source: tumours
-            indel-padding: indel-padding
-            snv-padding: snv-padding
-            sv-padding: sv-padding
-            input-snv: filter_merged_snv/merged_snv_vcf
-            input-sv: filter_merged_sv/merged_sv_vcf
-            input-indel: filter_merged_indel/merged_indel_vcf
-            inputFileDirectory: inputFileDirectory
-        out: [minibam]
-        scatter: [in_data]
-        run: ./minibam_sub_wf.cwl
-
-    # Create minibam for normal BAM. It would be nice to figure out how to get this into
-    # the main run_variant_bam step that currently only does tumour BAMs.
-    run_variant_bam_normal:
-        in:
-            indel-padding: indel-padding
-            snv-padding: snv-padding
-            sv-padding: sv-padding
-            input-snv: filter_merged_snv/merged_snv_vcf
-            input-sv: filter_merged_sv/merged_sv_vcf
-            input-indel: filter_merged_indel/merged_indel_vcf
-            inputFileDirectory: inputFileDirectory
-            input-bam: normalBam
-            outfile:
-                #type: string
-                source: normalBam
-                valueFrom: $("mini-".concat(self.basename))
-        run: Variantbam-for-dockstore/variantbam.cwl
-        out: [minibam]
-
-    #Gather all minibams into a single output array.
-    gather_minibams:
-        in:
-            tumour_minibams: run_variant_bam/minibam
-            normal_minibam: run_variant_bam_normal/minibam
-        run:
-            class: ExpressionTool
-            inputs:
-                tumour_minibams: File[]
-                normal_minibam: File
-            outputs:
-                minibams: File[]
-            expression: |
-                $( { minibams: inputs.tumour_minibams.concat(inputs.normal_minibam) } )
-        out: [minibams]
+    # # Do variantbam
+    # # This needs to be run for each tumour, using VCFs that are merged pipelines per tumour.
+    # run_variant_bam:
+    #     in:
+    #         in_data:
+    #             source: tumours
+    #         indel-padding: indel-padding
+    #         snv-padding: snv-padding
+    #         sv-padding: sv-padding
+    #         input-snv: filter_merged_snv/merged_snv_vcf
+    #         input-sv: filter_merged_sv/merged_sv_vcf
+    #         input-indel: filter_merged_indel/merged_indel_vcf
+    #         inputFileDirectory: inputFileDirectory
+    #     out: [minibam]
+    #     scatter: [in_data]
+    #     run: ./minibam_sub_wf.cwl
+    #
+    # # Create minibam for normal BAM. It would be nice to figure out how to get this into
+    # # the main run_variant_bam step that currently only does tumour BAMs.
+    # run_variant_bam_normal:
+    #     in:
+    #         indel-padding: indel-padding
+    #         snv-padding: snv-padding
+    #         sv-padding: sv-padding
+    #         input-snv: filter_merged_snv/merged_snv_vcf
+    #         input-sv: filter_merged_sv/merged_sv_vcf
+    #         input-indel: filter_merged_indel/merged_indel_vcf
+    #         inputFileDirectory: inputFileDirectory
+    #         input-bam: normalBam
+    #         outfile:
+    #             #type: string
+    #             source: normalBam
+    #             valueFrom: $("mini-".concat(self.basename))
+    #     run: Variantbam-for-dockstore/variantbam.cwl
+    #     out: [minibam]
+    #
+    # #Gather all minibams into a single output array.
+    # gather_minibams:
+    #     in:
+    #         tumour_minibams: run_variant_bam/minibam
+    #         normal_minibam: run_variant_bam_normal/minibam
+    #     run:
+    #         class: ExpressionTool
+    #         inputs:
+    #             tumour_minibams: File[]
+    #             normal_minibam: File
+    #         outputs:
+    #             minibams: File[]
+    #         expression: |
+    #             $( { minibams: inputs.tumour_minibams.concat(inputs.normal_minibam) } )
+    #     out: [minibams]
 
     zip_and_index_files_for_oxog:
         in:
             vcf:
                 source: get_cleaned_vcfs/cleaned_vcfs
+                # source: gather_vcfs_for_zip_and_index/vcfs
                 #type: File[]
         scatter: [vcf]
         out: [zipped_file]
         run: zip_and_index_vcf.cwl
+
+    gather_vcfs_for_oxog:
+        in:
+            vcf:
+                source: zip_and_index_files_for_oxog/zipped_file
+            extractedSNVs:
+                source: get_extracted_snvs/extracted_snvs
+        run:
+            class: ExpressionTool
+            inputs:
+                vcf: File[]
+                extractedSNVs: File[]?
+            outputs:
+                vcfs: File[]
+            expression: |
+                $( { vcfs: inputs.vcf.concat(inputs.extractedSNVs) } )
+        out: [vcfs]
+
 
     # Do OxoG. Will also need some additional intermediate steps to sort out the
     # inputs and ensure that the  VCFs and BAM for the same tumour are run
@@ -244,9 +268,8 @@ steps:
             inputFileDirectory: inputFileDirectory
             refDataDir: refDataDir
             oxoQScore: oxoQScore
-            # Need to get VCFs for this tumour. Need an array made of the outputs of earlier VCF pre-processing steps, filtered by tumourID
-            vcfsForOxoG: zip_and_index_files_for_oxog/zipped_file
-            extractedSnvs: get_extracted_snvs/extracted_snvs
+            vcfsForOxoG: gather_vcfs_for_oxog/vcfs
+            # extractedSnvs: get_extracted_snvs/extracted_snvs
         out: [oxogVCF]
         scatter: [in_data]
         run: oxog_sub_wf.cwl
@@ -260,44 +283,46 @@ steps:
                 array_of_arrays:
                     type: { type: array, items: { type: array, items: File } }
             expression: |
-                $({ oxogVCFs: flatten_nested_arrays(inputs.array_of_arrays[0]) })
+                $(
+                    { oxogVCFs: flatten_nested_arrays(inputs.array_of_arrays) }
+                )
             outputs:
                 oxogVCFs: File[]
         out:
             [oxogVCFs]
 
-    # Do Annotation.
-    # we need OxoG filtered files, and minibams (tumour and normal).
-    # Then we need to scatter. We can scatter on minibams, and perform all annotations
-    # for each minibam at a time.
-    run_annotator_snvs:
-        in:
-            tumourMinibams: run_variant_bam/minibam
-            VCFs: flatten_oxog_output/oxogVCFs
-            tumour_record:
-                source: tumours
-            normalMinibam: run_variant_bam_normal/minibam
-            variantType:
-                default: "SNV"
-        out:
-            [ annotated_vcfs ]
-        scatter: [tumour_record]
-        run: annotator_sub_wf.cwl
-    # Annotation must also be performed on INDELs but since INDELs don't get OxoG-filtered,
-    # we will use the normalized INDELs.
-    run_annotator_indels:
-        in:
-            tumourMinibams: run_variant_bam/minibam
-            VCFs: get_normalized_vcfs/normalized_vcfs
-            tumour_record:
-                source: tumours
-            normalMinibam: run_variant_bam_normal/minibam
-            variantType:
-                default: "INDEL"
-        out:
-            [annotated_vcfs]
-        scatter: [tumour_record]
-        run: annotator_sub_wf.cwl
+    # # Do Annotation.
+    # # we need OxoG filtered files, and minibams (tumour and normal).
+    # # Then we need to scatter. We can scatter on minibams, and perform all annotations
+    # # for each minibam at a time.
+    # run_annotator_snvs:
+    #     in:
+    #         tumourMinibams: run_variant_bam/minibam
+    #         VCFs: flatten_oxog_output/oxogVCFs
+    #         tumour_record:
+    #             source: tumours
+    #         normalMinibam: run_variant_bam_normal/minibam
+    #         variantType:
+    #             default: "SNV"
+    #     out:
+    #         [ annotated_vcfs ]
+    #     scatter: [tumour_record]
+    #     run: annotator_sub_wf.cwl
+    # # Annotation must also be performed on INDELs but since INDELs don't get OxoG-filtered,
+    # # we will use the normalized INDELs.
+    # run_annotator_indels:
+    #     in:
+    #         tumourMinibams: run_variant_bam/minibam
+    #         VCFs: get_normalized_vcfs/normalized_vcfs
+    #         tumour_record:
+    #             source: tumours
+    #         normalMinibam: run_variant_bam_normal/minibam
+    #         variantType:
+    #             default: "INDEL"
+    #     out:
+    #         [annotated_vcfs]
+    #     scatter: [tumour_record]
+    #     run: annotator_sub_wf.cwl
 
     # flatten_annotator_output:
     #     in:
@@ -314,24 +339,24 @@ steps:
     #     out:
     #         [annotated_vcfs]
 
-    gather_annotated_vcfs:
-        in:
-            annotated_snvs: run_annotator_snvs/annotated_vcfs
-            annotated_indels: run_annotator_indels/annotated_vcfs
-        run:
-            class: ExpressionTool
-            inputs:
-                annotated_snvs:
-                    type: { type: array, items: { type: array, items: File } }
-                annotated_indels:
-                    type: { type: array, items: { type: array, items: File } }
-            outputs:
-                annotated_vcfs: File[]
-            expression: |
-                $(
-                    { annotated_vcfs: flatten_nested_arrays(inputs.annotated_snvs).concat(flatten_nested_arrays(inputs.annotated_indels)) }
-                )
-        out:
-            [annotated_vcfs]
+    # gather_annotated_vcfs:
+    #     in:
+    #         annotated_snvs: run_annotator_snvs/annotated_vcfs
+    #         annotated_indels: run_annotator_indels/annotated_vcfs
+    #     run:
+    #         class: ExpressionTool
+    #         inputs:
+    #             annotated_snvs:
+    #                 type: { type: array, items: { type: array, items: File } }
+    #             annotated_indels:
+    #                 type: { type: array, items: { type: array, items: File } }
+    #         outputs:
+    #             annotated_vcfs: File[]
+    #         expression: |
+    #             $(
+    #                 { annotated_vcfs: flatten_nested_arrays(inputs.annotated_snvs).concat(flatten_nested_arrays(inputs.annotated_indels)) }
+    #             )
+    #     out:
+    #         [annotated_vcfs]
 
     # Do consensus-calling.

@@ -26,8 +26,8 @@ outputs:
 inputs:
     vcfsForOxoG:
         type: File[]
-    extractedSnvs:
-        type: File[]
+    # extractedSnvs:
+    #     type: File[]
     inputFileDirectory:
         type: Directory
     in_data:
@@ -57,9 +57,9 @@ steps:
             refDataDir: refDataDir
             oxoQScore: oxoQScore
             vcfNames:
-                source: [in_data, vcfsForOxoG, extractedSnvs]
+                source: [in_data, vcfsForOxoG]
                 valueFrom: |
                     ${
-                        return createArrayOfFilesForOxoG(self[0], self[1], self[2])
+                        return createArrayOfFilesForOxoG(self[0], self[1])
                     }
         out: [oxogVCF]
