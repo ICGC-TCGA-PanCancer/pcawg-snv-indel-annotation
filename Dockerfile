@@ -7,12 +7,13 @@ RUN apt-get install -y apt-utils
 RUN apt-get install -y pkg-config
 RUN apt-get install -y git
 RUN apt-get install -y tabix
-RUN apt-get install -y bash=4.3-14ubuntu1.2
+RUN apt-get install -y bash
 RUN apt-get install -y gcc
 RUN apt-get install -y make
 RUN apt-get install -y zlib1g-dev
 RUN apt-get install -y libstring-random-perl
 RUN apt-get install -y dh-autoreconf
+RUN apt-get autoremove
 
 # Install bcftools - this is used for normalizing VCFs
 RUN cd /opt/gitroot && git clone https://github.com/samtools/htslib.git
