@@ -59,10 +59,6 @@ inputs:
         items: "TumourType.yaml#TumourType"
 
 outputs:
-    # raw_oxog_filtered_files:
-    #     type: { type: array, items: { type: array, items: File } }
-    #     outputSource: run_oxog/oxogVCF
-    #     secondaryFiles: "*.tbi"
     oxog_filtered_files:
         type: File[]
         outputSource: flatten_oxog_output/oxogVCFs
