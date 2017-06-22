@@ -9,7 +9,7 @@ doc: |
 requirements:
     - class: SchemaDefRequirement
       types:
-          - $import: TumourType.yaml
+        - $import: TumourType.yaml
     - class: ScatterFeatureRequirement
     - class: StepInputExpressionRequirement
     - class: MultipleInputFeatureRequirement
@@ -46,15 +46,15 @@ steps:
                     ${
                         return chooseMiniBamForAnnotator(self[0], self[1])
                     }
-            variantType: variantType
-            # VCFs: VCFs
-            normalMinibam: normalMinibam
             vcfsToAnnotate:
                 source: [tumour_record, VCFs]
                 valueFrom: |
                     ${
                         return chooseVCFsForAnnotator(self[1], self[0].associatedVcfs )
                     }
+            variantType: variantType
+            # VCFs: VCFs
+            normalMinibam: normalMinibam
         scatter:
             [vcfsToAnnotate]
         out:
@@ -65,8 +65,6 @@ steps:
                 # tumour_record:
                 #     type: "TumourType.yaml#TumourType"
                 tumour_bam:
-                    type: File
-                normalMinibam:
                     type: File
                 vcfsToAnnotate:
                     type: File
