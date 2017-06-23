@@ -40,20 +40,16 @@ steps:
                 source: [tumour_record, VCFs]
                 valueFrom: |
                     ${
-                        // console.log('TEST')
-                        // console.log(self)
-                        //return self.associatedVcfs
                         return chooseVCFsForAnnotator(self[1], self[0].associatedVcfs)
                     }
             tumour_bam:
-                source: [tumour_record, tumourMinibams, VCFs]
+                source: [tumour_record, tumourMinibams]
                 valueFrom: |
                     ${
-                        return chooseMiniBamForAnnotator(self[1], self[0], self)
+                        return chooseMiniBamForAnnotator(self[1], self[0])
                     }
             variantType: variantType
             normalMinibam: normalMinibam
-        # scatter: [vcfsToAnnotate]
         out: [annotated_vcf]
         run:
             class: Workflow
@@ -89,37 +85,6 @@ steps:
                         [annotated_vcf]
                     run:
                          sga-annotate-docker/Dockstore.cwl
-
-
-            # class: Workflow
-            # inputs:
-            #     tumour_bam:
-            #         type: File
-            #     vcfsToAnnotate:
-            #         type: File
-            #     variantType:
-            #         type: string
-            #     tumour_bam:
-            #         type: File
-            #     normalMinibam:
-            #         type: File
-            # outputs:
-            #     annotated_vcf:
-            #         type: File
-            #         outputSource: annotator_sub_sub_workflow/annotated_vcf
-            # steps:
-            #     annotator_sub_sub_workflow:
-            #         in:
-            #             variant_type: variantType
-            #             input_vcf: vcfsToAnnotate
-            #             normal_bam: normalMinibam
-            #             tumour_bam: tumour_bam
-            #             output:
-            #                 source: [vcfsToAnnotate]
-            #                 valueFrom: $( self.basename.replace(".vcf","_annotated.vcf") )
-            #         out:
-            #             [ annotated_vcf ]
-            #         run: sga-annotate-docker/Dockstore.cwl
 
     # flatten_annotated_vcfs:
     #     in:

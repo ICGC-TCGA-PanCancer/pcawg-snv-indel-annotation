@@ -119,7 +119,7 @@ function chooseVCFsForAnnotator(VCFs, associatedVcfs)
 	return vcfsToUse;
 }
 
-function chooseMiniBamForAnnotator(tumourMinibams, tumours_record, self)
+function chooseMiniBamForAnnotator(tumourMinibams, tumours_record)
 {
 	// var minibamToUse
 	for (var j in tumourMinibams )
