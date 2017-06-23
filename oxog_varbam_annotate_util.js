@@ -112,14 +112,14 @@ function chooseVCFsForAnnotator(VCFs, associatedVcfs)
 		{
 			if ( flattened_array[j].basename.indexOf(associated_vcfs[i].replace(".vcf.gz","")) !== -1 )
 			{
-				vcfsToUse.push(flattened_array[j]);
+				vcfsToUse.push( flattened_array[j] );
 			}
 		}
 	}
 	return vcfsToUse;
 }
 
-function chooseMiniBamForAnnotator(tumourMinibams, tumours_record)
+function chooseMiniBamForAnnotator(tumourMinibams, tumours_record, self)
 {
 	// var minibamToUse
 	for (var j in tumourMinibams )

@@ -32,65 +32,94 @@ inputs:
 outputs:
     annotated_vcfs:
         type: File[]
-        # type: { items: { type: array, items: File } , type: array}
-        #outputSource: flatten_annotated_vcfs/flattened_annotated_vcfs_array
-        outputSource: annotator_sub_workflow/annotated_vcf
+        outputSource: level_0/annotated_vcf
 steps:
-    annotator_sub_workflow:
+    level_0:
         in:
-            # tumour_record: tumour_record
-            # tumourMinibams: tumourMinibams
-            tumour_bam:
-                source: [tumourMinibams, tumour_record]
-                valueFrom: |
-                    ${
-                        return chooseMiniBamForAnnotator(self[0], self[1])
-                    }
             vcfsToAnnotate:
                 source: [tumour_record, VCFs]
                 valueFrom: |
                     ${
-                        return chooseVCFsForAnnotator(self[1], self[0].associatedVcfs )
+                        // console.log('TEST')
+                        // console.log(self)
+                        //return self.associatedVcfs
+                        return chooseVCFsForAnnotator(self[1], self[0].associatedVcfs)
+                    }
+            tumour_bam:
+                source: [tumour_record, tumourMinibams, VCFs]
+                valueFrom: |
+                    ${
+                        return chooseMiniBamForAnnotator(self[1], self[0], self)
                     }
             variantType: variantType
-            # VCFs: VCFs
             normalMinibam: normalMinibam
-        scatter:
-            [vcfsToAnnotate]
-        out:
-            [annotated_vcf]
+        # scatter: [vcfsToAnnotate]
+        out: [annotated_vcf]
         run:
             class: Workflow
             inputs:
-                # tumour_record:
-                #     type: "TumourType.yaml#TumourType"
                 tumour_bam:
                     type: File
                 vcfsToAnnotate:
-                    type: File
+                    type: File[]
                 variantType:
                     type: string
-                tumour_bam:
-                    type: File
                 normalMinibam:
                     type: File
             outputs:
                 annotated_vcf:
-                    type: File
-                    outputSource: annotator_sub_sub_workflow/annotated_vcf
+                    type: File[]
+                    outputSource: level_1/annotated_vcf
             steps:
-                annotator_sub_sub_workflow:
+                level_1:
                     in:
-                        variant_type: variantType
-                        input_vcf: vcfsToAnnotate
-                        normal_bam: normalMinibam
                         tumour_bam: tumour_bam
+                        input_vcf: vcfsToAnnotate
+                        variantType: variantType
+                        normal_bam: normalMinibam
                         output:
                             source: [vcfsToAnnotate]
-                            valueFrom: $( self.basename.replace(".vcf","_annotated.vcf") )
+                            valueFrom: ${
+                                console.log(self);
+                                console.log(self.basename);
+                                return 'blah'
+                                }
+                    scatter: [input_vcf]
                     out:
-                        [ annotated_vcf ]
-                    run: sga-annotate-docker/Dockstore.cwl
+                        [annotated_vcf]
+                    run:
+                         sga-annotate-docker/Dockstore.cwl
+
+
+            # class: Workflow
+            # inputs:
+            #     tumour_bam:
+            #         type: File
+            #     vcfsToAnnotate:
+            #         type: File
+            #     variantType:
+            #         type: string
+            #     tumour_bam:
+            #         type: File
+            #     normalMinibam:
+            #         type: File
+            # outputs:
+            #     annotated_vcf:
+            #         type: File
+            #         outputSource: annotator_sub_sub_workflow/annotated_vcf
+            # steps:
+            #     annotator_sub_sub_workflow:
+            #         in:
+            #             variant_type: variantType
+            #             input_vcf: vcfsToAnnotate
+            #             normal_bam: normalMinibam
+            #             tumour_bam: tumour_bam
+            #             output:
+            #                 source: [vcfsToAnnotate]
+            #                 valueFrom: $( self.basename.replace(".vcf","_annotated.vcf") )
+            #         out:
+            #             [ annotated_vcf ]
+            #         run: sga-annotate-docker/Dockstore.cwl
 
     # flatten_annotated_vcfs:
     #     in:
