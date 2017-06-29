@@ -124,8 +124,7 @@ steps:
           snvs_for_merge: File[]
         expression: |
             $({
-                snvs_for_merge: ( null !== inputs.extracted_snvs ?  filterFor("svcp","snv_mnv",inputs.clean_vcfs)
-                                                                : (filterFor("svcp","snv_mnv",inputs.clean_vcfs)).concat(filterFor("svcp","snv_mnv",inputs.extracted_snvs)) )
+                snvs_for_merge: ( (filterFor("svcp","snv_mnv",inputs.clean_vcfs)).concat(filterFor("svcp","snv_mnv",inputs.extracted_snvs)) )
             })
 
     gather_dkfz_embl_snvs:
@@ -144,8 +143,7 @@ steps:
           snvs_for_merge: File[]
         expression: |
             $({
-                snvs_for_merge: ( null !== inputs.extracted_snvs ? filterFor("dkfz-snvCalling","snv_mnv",inputs.clean_vcfs)
-                                                                : (filterFor("dkfz-snvCalling","snv_mnv",inputs.clean_vcfs)).concat(filterFor("dkfz-snvCalling","snv_mnv",inputs.extracted_snvs)) )
+                snvs_for_merge: ( (filterFor("dkfz-snvCalling","snv_mnv",inputs.clean_vcfs)).concat(filterFor("dkfz-snvCalling","snv_mnv",inputs.extracted_snvs)) )
             })
 
     gather_broad_snvs:
@@ -164,8 +162,7 @@ steps:
           snvs_for_merge: File[]
         expression: |
             $({
-                snvs_for_merge: ( null !== inputs.extracted_snvs ? filterFor("broad-mutect","snv_mnv",inputs.clean_vcfs)
-                                                                : (filterFor("broad-mutect","snv_mnv",inputs.clean_vcfs)).concat(filterFor("broad-mutect","snv_mnv",inputs.extracted_snvs)) )
+                snvs_for_merge: ( (filterFor("broad-mutect","snv_mnv",inputs.clean_vcfs)).concat(filterFor("broad-mutect","snv_mnv",inputs.extracted_snvs)) )
             })
 
     gather_muse_snvs:
@@ -184,8 +181,7 @@ steps:
           snvs_for_merge: File[]
         expression: |
             $({
-                snvs_for_merge: ( inputs.extracted_snvs !== null ? filterFor("MUSE","snv_mnv",inputs.clean_vcfs)
-                                                                : filterFor("MUSE","snv_mnv",inputs.clean_vcfs)).concat(filterFor("MUSE","snv_mnv",inputs.extracted_snvs))
+                snvs_for_merge: ( filterFor("MUSE","snv_mnv",inputs.clean_vcfs)).concat(filterFor("MUSE","snv_mnv",inputs.extracted_snvs))
             })
 
     #############################################
