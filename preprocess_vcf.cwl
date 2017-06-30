@@ -82,7 +82,27 @@ steps:
       scatter: extract_snv/vcf
       in:
           vcf: normalize/normalized-vcf
-      out: [extracted_snvs]
+      out: [ extracted_snvs ]
+
+    # Remove "null" elements from the array.
+    null_filter_extracted_snvs:
+      in:
+        extracted_snvs:
+          source: extract_snv/extracted_snvs
+      run:
+          class: ExpressionTool
+          inputs:
+              extracted_snvs:
+                  type:
+                      type: array
+                      items: [ File, "null" ]
+          outputs:
+              cleaned_extracted_snvs: File[]
+          expression: |
+            $(
+                { cleaned_extracted_snvs: inputs.extracted_snvs.filter(function(n){return n != null}) }
+            )
+      out: [cleaned_extracted_snvs]
 
     #############################################
     # Gather SNVs on a per-workflow basis
@@ -93,7 +113,7 @@ steps:
         clean_vcfs:
             source: clean/clean_vcf
         extracted_snvs:
-            source: extract_snv/extracted_snvs
+            source: null_filter_extracted_snvs/cleaned_extracted_snvs
       out: [snvs_for_merge]
       run:
         class: ExpressionTool
@@ -103,14 +123,16 @@ steps:
         outputs:
           snvs_for_merge: File[]
         expression: |
-            $({ snvs_for_merge: (filterFor("svcp","snv_mnv",inputs.clean_vcfs)).concat(filterFor("svcp","snv_mnv",inputs.extracted_snvs)) })
+            $({
+                snvs_for_merge: ( (filterFor("svcp","snv_mnv",inputs.clean_vcfs)).concat(filterFor("svcp","snv_mnv",inputs.extracted_snvs)) )
+            })
 
     gather_dkfz_embl_snvs:
       in:
         clean_vcfs:
             source: clean/clean_vcf
         extracted_snvs:
-            source: extract_snv/extracted_snvs
+            source: null_filter_extracted_snvs/cleaned_extracted_snvs
       out: [snvs_for_merge]
       run:
         class: ExpressionTool
@@ -120,14 +142,16 @@ steps:
         outputs:
           snvs_for_merge: File[]
         expression: |
-            $({ snvs_for_merge: (filterFor("dkfz-snvCalling","snv_mnv",inputs.clean_vcfs)).concat(filterFor("dkfz-snvCalling","snv_mnv",inputs.extracted_snvs)) })
+            $({
+                snvs_for_merge: ( (filterFor("dkfz-snvCalling","snv_mnv",inputs.clean_vcfs)).concat(filterFor("dkfz-snvCalling","snv_mnv",inputs.extracted_snvs)) )
+            })
 
     gather_broad_snvs:
       in:
         clean_vcfs:
             source: clean/clean_vcf
         extracted_snvs:
-            source: extract_snv/extracted_snvs
+            source: null_filter_extracted_snvs/cleaned_extracted_snvs
       out: [snvs_for_merge]
       run:
         class: ExpressionTool
@@ -137,14 +161,16 @@ steps:
         outputs:
           snvs_for_merge: File[]
         expression: |
-            $({ snvs_for_merge: (filterFor("broad-mutect","snv_mnv",inputs.clean_vcfs)).concat(filterFor("broad-mutect","snv_mnv",inputs.extracted_snvs)) })
+            $({
+                snvs_for_merge: ( (filterFor("broad-mutect","snv_mnv",inputs.clean_vcfs)).concat(filterFor("broad-mutect","snv_mnv",inputs.extracted_snvs)) )
+            })
 
     gather_muse_snvs:
       in:
         clean_vcfs:
             source: clean/clean_vcf
         extracted_snvs:
-            source: extract_snv/extracted_snvs
+            source: null_filter_extracted_snvs/cleaned_extracted_snvs
       out: [snvs_for_merge]
       run:
         class: ExpressionTool
@@ -154,7 +180,9 @@ steps:
         outputs:
           snvs_for_merge: File[]
         expression: |
-            $({ snvs_for_merge: (filterFor("MUSE","snv_mnv",inputs.clean_vcfs)).concat(filterFor("MUSE","snv_mnv",inputs.extracted_snvs)) })
+            $({
+                snvs_for_merge: ( filterFor("MUSE","snv_mnv",inputs.clean_vcfs)).concat(filterFor("MUSE","snv_mnv",inputs.extracted_snvs))
+            })
 
     #############################################
     # Gather INDELs on a per-workflow basis
@@ -295,7 +323,7 @@ steps:
     populate_output_record:
         in:
             mergedVcfs : merge_vcfs/output
-            extractedSnvs : extract_snv/extracted_snvs
+            extractedSnvs : null_filter_extracted_snvs/cleaned_extracted_snvs
             normalizedVcfs: normalize/normalized-vcf
             cleanedVcfs: clean/clean_vcf
         out:
@@ -304,7 +332,7 @@ steps:
             class: ExpressionTool
             inputs:
                 mergedVcfs: File[]
-                extractedSnvs: File[]
+                extractedSnvs: File[]?
                 normalizedVcfs: File[]
                 cleanedVcfs: File[]
             outputs:
