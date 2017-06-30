@@ -112,7 +112,12 @@ function chooseVCFsForAnnotator(VCFs, associatedVcfs)
 		{
 			if ( flattened_array[j].basename.indexOf(associated_vcfs[i].replace(".vcf.gz","")) !== -1 )
 			{
+				//console.log("OK "+flattened_array[j].basename + " was in "+associated_vcfs[i] +" so it will be annotated!")
 				vcfsToUse.push( flattened_array[j] );
+			}
+			else
+			{
+				//console.log("Not OK "+ flattened_array[j].basename + " was NOT in "+associated_vcfs[i] +" so it will NOT be annotated!")
 			}
 		}
 	}
