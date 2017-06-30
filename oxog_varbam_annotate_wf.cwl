@@ -210,7 +210,7 @@ steps:
         run: Variantbam-for-dockstore/variantbam.cwl
         out: [minibam]
 
-    #Gather all minibams into a single output array.
+    # Gather all minibams into a single output array.
     gather_minibams:
         in:
             tumour_minibams: run_variant_bam/minibam
@@ -230,8 +230,6 @@ steps:
         in:
             vcf:
                 source: get_cleaned_vcfs/cleaned_vcfs
-                # source: gather_vcfs_for_zip_and_index/vcfs
-                #type: File[]
         scatter: [vcf]
         out: [zipped_file]
         run: zip_and_index_vcf.cwl
@@ -239,10 +237,7 @@ steps:
     gather_vcfs_for_oxog:
         in:
             vcf:
-                source: zip_and_index_files_for_oxog/zipped_file
-                # TODO: filter for SNV-only files!
-            extractedSNVs:
-                source: get_extracted_snvs/extracted_snvs
+                source: [zip_and_index_files_for_oxog/zipped_file]
                 valueFrom: |
                     ${
                         var snvs = []
@@ -253,7 +248,10 @@ steps:
                                 snvs.push(self[i])
                             }
                         }
+                        return snvs
                     }
+            extractedSNVs:
+                source: get_extracted_snvs/extracted_snvs
         run:
             class: ExpressionTool
             inputs:
@@ -262,7 +260,9 @@ steps:
             outputs:
                 vcfs: File[]
             expression: |
-                $( { vcfs: inputs.vcf.concat(inputs.extractedSNVs) } )
+                $(
+                    { vcfs: inputs.vcf.concat(inputs.extractedSNVs) }
+                )
         out: [vcfs]
 
 
