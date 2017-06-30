@@ -34,6 +34,8 @@ outputs:
         type: File[]
         outputSource: level_0/annotated_vcf
 steps:
+    # This step will prepare the next level by creating vcfsToAnnotate as an array of
+    # vcfs that need to be annotated
     level_0:
         in:
             vcfsToAnnotate:
@@ -67,20 +69,13 @@ steps:
                     type: File[]
                     outputSource: level_1/annotated_vcf
             steps:
+                # This step scatters across the array of VCFs created by level_0
                 level_1:
                     in:
                         tumour_bam: tumour_bam
                         input_vcf: vcfsToAnnotate
                         variant_type: variantType
                         normal_bam: normalMinibam
-                        # output:
-                            # source: [vcfsToAnnotate]
-                            # valueFrom: |
-                            #     ${
-                            #         console.log("TEST")
-                            #         console.log(self)
-                            #         return self.basename.replace('.vcf.gz','_annotated.vcf')
-                            #     }
                     scatter: [input_vcf]
                     out:
                         [annotated_vcf]
@@ -96,6 +91,7 @@ steps:
                             normal_bam:
                                 type: File
                         steps:
+                            # This step takes the scatter of level_1 and executes the annotator on each VCF.
                             level_2:
                                 in:
                                     tumour_bam: tumour_bam
@@ -116,35 +112,3 @@ steps:
                             annotated_vcf:
                                 type: File
                                 outputSource: level_2/annotated_vcf
-
-    # flatten_annotated_vcfs:
-    #     in:
-    #         array_of_arrays: annotator_sub_workflow/annotated_vcf
-    #     run:
-    #         class: ExpressionTool
-    #         inputs:
-    #             array_of_arrays:
-    #                 type:  { type: array, items: { type: array, items: File } }
-    #         outputs:
-    #             flattened_annotated_vcfs_array: File[]
-    #         expression: |
-    #             $(
-    #                 { flattened_annotated_vcfs_array: flatten_nested_arrays(inputs.array_of_arrays[0]) }
-    #             )
-    #     out:
-    #         [flattened_annotated_vcfs_array]
-
-    # flatten_oxog_output:
-    #     in:
-    #         array_of_arrays: run_oxog/oxogVCF
-    #     run:
-    #         class: ExpressionTool
-    #         inputs:
-    #             array_of_arrays:
-    #                 type: { type: array, items: { type: array, items: File } }
-    #         expression: |
-    #             $({ oxogVCFs: flatten_nested_arrays(inputs.array_of_arrays[0]) })
-    #         outputs:
-    #             oxogVCFs: File[]
-    #     out:
-    #         [oxogVCFs]
