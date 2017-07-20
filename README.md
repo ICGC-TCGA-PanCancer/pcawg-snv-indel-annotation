@@ -10,3 +10,9 @@ Tools contained within:
  - normalize.sh - Normalizes INDEL files by calling bcf-tools norm.
  - pass_filter.sh - Performs pass-filtering on VCFs.
  - vcf_merge_by_type.pl - Merges VCFs.
+
+To get the submodules, use a command like this:
+
+```bash
+$ git submodule update --init --recursive
+```
