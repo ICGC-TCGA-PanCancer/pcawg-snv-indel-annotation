@@ -52,6 +52,11 @@ else
 	echo "PATH_TO_NORMAL ($PATH_TO_TUMOUR_MINIBAM) already has an index file."
 fi
 
+shift
+shift
+shift
+shift
+shift
 # Store the inputs in an array.
 VCFS=( "$@" )
 
@@ -71,14 +76,10 @@ for vcf in ${VCFS[@]}; do
 	while read location; do
 		echo "for location $location:"
 		# Get the count in the normal bam for this location, using samtools
-		# PATH_TO_NORMAL=$( ( [ -f /datastore/bam/normal/*/*.bam ] && echo /datastore/bam/normal/*/*.bam) || ([ -f /datastore/bam/normal/*.bam ] && echo /datastore/bam/normal/*.bam))
 		COUNT_IN_NORMAL=$(samtools view $PATH_TO_NORMAL 22:$location-$location -c)
 		echo "count in normal - original bam: $COUNT_IN_NORMAL"
 
 		# Get count in normal minibam, using samtools
-		# NORMAL_FILE_BASENAME=$(basename /datastore/bam/normal/*/*.bam)
-		#NORMAL_FILE_BASENAME=$(basename $PATH_TO_NORMAL)
-		# COUNT_IN_NORMAL_MINIBAM=$(samtools view /datastore/variantbam_results/${NORMAL_FILE_BASENAME/\.bam/_minibam.bam} 22:$location-$location -c)
 		COUNT_IN_NORMAL_MINIBAM=$(samtools view $PATH_TO_NORMAL_MINIBAM 22:$location-$location -c)
 		echo "count in normal - minibam: $COUNT_IN_NORMAL_MINIBAM"
 
@@ -86,18 +87,16 @@ for vcf in ${VCFS[@]}; do
 			echo "MISMATCH in normal original vs normal minibam ! Something may have gone wrong in vcf merge or in variantbam!"
 			exit 1;
 		fi
-		# for the tumour (now only run this script with ONE tumour), get count in original and mini BAMs.
-		for tumour in $(ls $PATH_TO_TUMOUR_BAM) ; do
-			TUMOUR_FILE_BASENAME=$(basename $tumour)
-			COUNT_IN_TUMOUR_1=$(samtools view $tumour 22:$location-$location -c)
-			echo "count in tumour ${TUMOUR_FILE_BASENAME}: $COUNT_IN_TUMOUR_1"
-			COUNT_IN_TUMOUR_1_MINIBAM=$(samtools view $PATH_TO_TUMOUR_MINIBAM/mini-$TUMOUR_FILE_BASENAME 22:$location-$location -c)
-			echo "count in tumour mini-$TUMOUR_FILE_BASENAME: $COUNT_IN_TUMOUR_1_MINIBAM"
-			if [ "$COUNT_IN_TUMOUR_1" != "$COUNT_IN_TUMOUR_1_MINIBAM" ] ; then
-				echo "MISMATCH in tumour original vs tumour minibam! Something may have gone wrong in vcf merge or in variantbam!"
-				exit 1;
-			fi
-		done
+
+		COUNT_IN_TUMOUR_1=$(samtools view $PATH_TO_TUMOUR_BAM 22:$location-$location -c)
+		echo "count in tumour $PATH_TO_TUMOUR_BAM: $COUNT_IN_TUMOUR_1"
+		COUNT_IN_TUMOUR_1_MINIBAM=$(samtools view $PATH_TO_TUMOUR_MINIBAM 22:$location-$location -c)
+		echo "count in tumour $PATH_TO_TUMOUR_MINIBAM: $COUNT_IN_TUMOUR_1_MINIBAM"
+		if [ "$COUNT_IN_TUMOUR_1" != "$COUNT_IN_TUMOUR_1_MINIBAM" ] ; then
+			echo "MISMATCH in tumour original vs tumour minibam! Something may have gone wrong in vcf merge or in variantbam!"
+			exit 1;
+		fi
+
 	done <$WORKING_DIR/$OUTFILE
 done
 set +e

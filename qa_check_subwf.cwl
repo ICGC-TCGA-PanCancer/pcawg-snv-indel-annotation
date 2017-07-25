@@ -31,10 +31,12 @@ inputs:
         type: File[]
     normal_bam:
         type: File
+        secondaryFiles: .bai
     normal_minibam:
         type: File
     tumour_bam:
         type: File
+        secondaryFiles: .bai
     tumour_minibam:
         type: File
 
