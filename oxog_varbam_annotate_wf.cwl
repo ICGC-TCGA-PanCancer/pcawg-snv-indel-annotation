@@ -62,16 +62,21 @@ outputs:
     oxog_filtered_files:
         type: File[]
         outputSource: flatten_oxog_output/oxogVCFs
+        secondaryFiles: "*.tbi"
     minibams:
         type: File[]
         outputSource: gather_minibams/minibams
         secondaryFiles: "*.bai"
     annotated_files:
         type: File[]
-        outputSource: flatten_annotator_output/annotated_vcfs
+        outputSource: gather_annotated_vcfs/annotated_vcfs
 
 steps:
-    #preprocess the VCFs
+    ########################################
+    # Preprocessing                        #
+    ########################################
+    #
+    # Execute the preprocessor subworkflow.
     preprocess_vcfs:
       run: preprocess_vcf.cwl
       in:
@@ -106,6 +111,19 @@ steps:
                 $( { cleaned_vcfs:  inputs.in_record.cleanedVcfs } )
         out: [cleaned_vcfs]
 
+    get_normalized_vcfs:
+        in:
+            in_record: preprocess_vcfs/preprocessedFiles
+        run:
+            class: ExpressionTool
+            inputs:
+                in_record: "PreprocessedFilesType.yaml#PreprocessedFileset"
+            outputs:
+                normalized_vcfs: File[]
+            expression: |
+                $( { normalized_vcfs:  inputs.in_record.normalizedVcfs } )
+        out: [normalized_vcfs]
+
     get_extracted_snvs:
         in:
             in_record: preprocess_vcfs/preprocessedFiles
@@ -114,7 +132,7 @@ steps:
             inputs:
                 in_record: "PreprocessedFilesType.yaml#PreprocessedFileset"
             outputs:
-                extracted_snvs: File[]
+                extracted_snvs: File[]?
             expression: |
                 $( { extracted_snvs:  inputs.in_record.extractedSnvs } )
         out: [extracted_snvs]
@@ -145,7 +163,6 @@ steps:
                 $({ merged_indel_vcf: filterFileArray("indel",inputs.in_vcfs) })
         out: [merged_indel_vcf]
 
-
     filter_merged_sv:
         in:
             in_vcfs: get_merged_vcfs/merged_vcfs
@@ -159,7 +176,9 @@ steps:
                 $({ merged_sv_vcf: filterFileArray("sv",inputs.in_vcfs) })
         out: [merged_sv_vcf]
 
-    # Do variantbam
+    ########################################
+    # Do Variantbam                        #
+    ########################################
     # This needs to be run for each tumour, using VCFs that are merged pipelines per tumour.
     run_variant_bam:
         in:
@@ -189,13 +208,12 @@ steps:
             inputFileDirectory: inputFileDirectory
             input-bam: normalBam
             outfile:
-                #type: string
                 source: normalBam
                 valueFrom: $("mini-".concat(self.basename))
         run: Variantbam-for-dockstore/variantbam.cwl
         out: [minibam]
 
-    #Gather all minibams into a single output array.
+    # Gather all minibams into a single output array.
     gather_minibams:
         in:
             tumour_minibams: run_variant_bam/minibam
@@ -211,18 +229,56 @@ steps:
                 $( { minibams: inputs.tumour_minibams.concat(inputs.normal_minibam) } )
         out: [minibams]
 
+    ### Prepare for OxoG!
+    # First we need to zip and index the VCFs - the OxoG filter requires them to be
+    # zipped and index.
     zip_and_index_files_for_oxog:
         in:
             vcf:
                 source: get_cleaned_vcfs/cleaned_vcfs
-                #type: File[]
         scatter: [vcf]
         out: [zipped_file]
         run: zip_and_index_vcf.cwl
 
-    # Do OxoG. Will also need some additional intermediate steps to sort out the
-    # inputs and ensure that the  VCFs and BAM for the same tumour are run
-    # together. OxoG only runs on SNV VCFs
+    # Gather the appropriate VCFS.
+    # All SNVs, and all SNVs extracted from INDELs.
+    gather_vcfs_for_oxog:
+        in:
+            vcf:
+                source: [zip_and_index_files_for_oxog/zipped_file]
+                valueFrom: |
+                    ${
+                        var snvs = []
+                        for (var i in self)
+                        {
+                            if (self[i].basename.indexOf("snv") !== -1)
+                            {
+                                snvs.push(self[i])
+                            }
+                        }
+                        return snvs
+                    }
+            extractedSNVs:
+                source: get_extracted_snvs/extracted_snvs
+        run:
+            class: ExpressionTool
+            inputs:
+                vcf: File[]
+                extractedSNVs: File[]?
+            outputs:
+                vcfs: File[]
+            expression: |
+                $(
+                    { vcfs: inputs.vcf.concat(inputs.extractedSNVs) }
+                )
+        out: [vcfs]
+
+
+    ########################################
+    # Do OxoG Filtering                    #
+    ########################################
+    #
+    # OxoG only runs on SNV VCFs
     run_oxog:
         in:
             in_data:
@@ -230,9 +286,7 @@ steps:
             inputFileDirectory: inputFileDirectory
             refDataDir: refDataDir
             oxoQScore: oxoQScore
-            # Need to get VCFs for this tumour. Need an array made of the outputs of earlier VCF pre-processing steps, filtered by tumourID
-            vcfsForOxoG: zip_and_index_files_for_oxog/zipped_file
-            extractedSnvs: get_extracted_snvs/extracted_snvs
+            vcfsForOxoG: gather_vcfs_for_oxog/vcfs
         out: [oxogVCF]
         scatter: [in_data]
         run: oxog_sub_wf.cwl
@@ -246,42 +300,65 @@ steps:
                 array_of_arrays:
                     type: { type: array, items: { type: array, items: File } }
             expression: |
-                $({ oxogVCFs: flatten_nested_arrays(inputs.array_of_arrays[0]) })
+                $(
+                    { oxogVCFs: flatten_nested_arrays(inputs.array_of_arrays) }
+                )
             outputs:
                 oxogVCFs: File[]
         out:
             [oxogVCFs]
 
-    # Do Annotation. This will probably need some intermediate steps...
+    ########################################
+    # Do Annotation.                       #
+    ########################################
+    #
     # we need OxoG filtered files, and minibams (tumour and normal).
     # Then we need to scatter. We can scatter on minibams, and perform all annotations
     # for each minibam at a time.
-    run_annotator:
+    run_annotator_snvs:
         in:
             tumourMinibams: run_variant_bam/minibam
-            oxogVCFs: flatten_oxog_output/oxogVCFs
+            VCFs: flatten_oxog_output/oxogVCFs
             tumour_record:
                 source: tumours
             normalMinibam: run_variant_bam_normal/minibam
-        out:
-            [annotated_vcfs]
+            variantType:
+                default: "SNV"
+        out: [ annotated_vcfs ]
         scatter: [tumour_record]
         run: annotator_sub_wf.cwl
 
-
-
-    flatten_annotator_output:
+    # Annotation must also be performed on INDELs but since INDELs don't get OxoG-filtered,
+    # we will use the normalized INDELs.
+    run_annotator_indels:
         in:
-            array_of_arrays: run_annotator/annotated_vcfs
+            tumourMinibams: run_variant_bam/minibam
+            VCFs: get_normalized_vcfs/normalized_vcfs
+            tumour_record:
+                source: tumours
+            normalMinibam: run_variant_bam_normal/minibam
+            variantType:
+                default: "INDEL"
+        out: [annotated_vcfs]
+        scatter: [tumour_record]
+        run: annotator_sub_wf.cwl
+
+    gather_annotated_vcfs:
+        in:
+            annotated_snvs: run_annotator_snvs/annotated_vcfs
+            annotated_indels: run_annotator_indels/annotated_vcfs
         run:
             class: ExpressionTool
             inputs:
-                array_of_arrays:
+                annotated_snvs:
                     type: { type: array, items: { type: array, items: File } }
-            expression: |
-                $({ annotated_vcfs: flatten_nested_arrays(inputs.array_of_arrays) })
+                annotated_indels:
+                    type: { type: array, items: { type: array, items: File } }
             outputs:
                 annotated_vcfs: File[]
+            expression: |
+                $(
+                    { annotated_vcfs: flatten_nested_arrays(inputs.annotated_snvs).concat(flatten_nested_arrays(inputs.annotated_indels)) }
+                )
         out:
             [annotated_vcfs]
-    # Do consensus-calling.

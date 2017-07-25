@@ -26,8 +26,6 @@ outputs:
 inputs:
     vcfsForOxoG:
         type: File[]
-    extractedSnvs:
-        type: File[]
     inputFileDirectory:
         type: Directory
     in_data:
@@ -36,7 +34,7 @@ inputs:
         type: Directory
     oxoQScore:
         type: string
-    # Need to get VCFs for this tumour. Need an array made of the outputs of earlier VCF pre-processing steps, filtered by tumourID
+
 steps:
     sub_run_oxog:
         run: oxog.cwl
@@ -57,9 +55,9 @@ steps:
             refDataDir: refDataDir
             oxoQScore: oxoQScore
             vcfNames:
-                source: [in_data, vcfsForOxoG, extractedSnvs]
+                source: [in_data, vcfsForOxoG]
                 valueFrom: |
                     ${
-                        return createArrayOfFilesForOxoG(self[0], self[1], self[2])
+                        return createArrayOfFilesForOxoG(self[0], self[1])
                     }
         out: [oxogVCF]
