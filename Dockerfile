@@ -13,6 +13,7 @@ RUN apt-get install -y make
 RUN apt-get install -y zlib1g-dev
 RUN apt-get install -y libstring-random-perl
 RUN apt-get install -y dh-autoreconf
+RUN apt-get install -y samtools
 RUN apt-get autoremove
 
 # Install bcftools - this is used for normalizing VCFs

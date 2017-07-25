@@ -1,6 +1,12 @@
 #! /bin/bash
 
-echo "Arguments given: $@"
+echo -e "Arguments given:\n\t$@"
+set -e
+
+if [ "$#" -eq 0 ] ; then
+	echo "ERROR: No arguments given!"
+	exit 1
+fi
 
 # Inputs:
 # 1 Working directory where files can be written to
@@ -12,21 +18,38 @@ echo "Arguments given: $@"
 #    which is not pass-filtered, so include the original; and smufin, which will only have
 #    an INDEL that should be included) that are associated with the given tumour
 
+WORKING_DIR=$1
+PATH_TO_NORMAL=$2
+PATH_TO_NORMAL_MINIBAM=$3
+PATH_TO_TUMOUR_BAM=$4
+PATH_TO_TUMOUR_MINIBAM=$5
 
-WORKING_DIR=$0
-shift
-PATH_TO_NORMAL=$1
-shift
-PATH_TO_NORMAL_MINIBAM=$2
-shift
-PATH_TO_TUMOUR_BAM=$3
-shift
-PATH_TO_TUMOUR_MINIBAM=$4
-shift
+if [ ! -f $PATH_TO_NORMAL.bai ] ; then
+	echo "PATH_TO_NORMAL ($PATH_TO_NORMAL) is missing an index file. Indexing now..."
+	samtools index $PATH_TO_NORMAL
+else
+	echo "PATH_TO_NORMAL ($PATH_TO_NORMAL) already has an index file."
+fi
 
-if [ "$#" -eq 0 ] ; then
-	echo "ERROR: No arguments given!"
-	exit 1
+if [ ! -f $PATH_TO_NORMAL_MINIBAM.bai ] ; then
+	echo "PATH_TO_NORMAL_MINIBAM ($PATH_TO_NORMAL_MINIBAM) is missing an index file. Indexing now..."
+	samtools index $PATH_TO_NORMAL_MINIBAM
+else
+	echo "PATH_TO_NORMAL ($PATH_TO_NORMAL_MINIBAM) already has an index file."
+fi
+
+if [ ! -f $PATH_TO_TUMOUR_BAM.bai ] ; then
+	echo "PATH_TO_TUMOUR_BAM ($PATH_TO_TUMOUR_BAM) is missing an index file. Indexing now..."
+	samtools index $PATH_TO_TUMOUR_BAM
+else
+	echo "PATH_TO_NORMAL ($PATH_TO_TUMOUR_BAM) already has an index file."
+fi
+
+if [ ! -f $PATH_TO_TUMOUR_MINIBAM.bai ] ; then
+	echo "PATH_TO_TUMOUR_MINIBAM ($PATH_TO_TUMOUR_MINIBAM) is missing an index file. Indexing now..."
+	samtools index $PATH_TO_TUMOUR_MINIBAM
+else
+	echo "PATH_TO_NORMAL ($PATH_TO_TUMOUR_MINIBAM) already has an index file."
 fi
 
 # Store the inputs in an array.
@@ -39,6 +62,8 @@ for vcf in ${VCFS[@]}; do
 	echo "Checking file: $vcf"
 	OUTFILE=$(basename $vcf)
 	OUTFILE=${OUTFILE/\.vcf\.gz/.chr22.positions.txt}
+	# echo "Outfile name: $OUTFILE"
+	# echo "Working dir: $WORKING_DIR"
 
 	# Working just with Chromosome 22 - this it not a comprehensive in-depth reconciliation, just a quick sanity-check that should catch most problems.
 	zcat $vcf | grep ^22 | cut -f2 > $WORKING_DIR/$OUTFILE
@@ -52,7 +77,7 @@ for vcf in ${VCFS[@]}; do
 
 		# Get count in normal minibam, using samtools
 		# NORMAL_FILE_BASENAME=$(basename /datastore/bam/normal/*/*.bam)
-		NORMAL_FILE_BASENAME=$(basename $PATH_TO_NORMAL)
+		#NORMAL_FILE_BASENAME=$(basename $PATH_TO_NORMAL)
 		# COUNT_IN_NORMAL_MINIBAM=$(samtools view /datastore/variantbam_results/${NORMAL_FILE_BASENAME/\.bam/_minibam.bam} 22:$location-$location -c)
 		COUNT_IN_NORMAL_MINIBAM=$(samtools view $PATH_TO_NORMAL_MINIBAM 22:$location-$location -c)
 		echo "count in normal - minibam: $COUNT_IN_NORMAL_MINIBAM"
@@ -75,3 +100,4 @@ for vcf in ${VCFS[@]}; do
 		done
 	done <$WORKING_DIR/$OUTFILE
 done
+set +e
