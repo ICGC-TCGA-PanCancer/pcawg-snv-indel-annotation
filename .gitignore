@@ -7,3 +7,6 @@
 *.fai
 *.bam
 *.bam.bai
+
+consensus_call_docker
+consensus-calling-for-dockstore
