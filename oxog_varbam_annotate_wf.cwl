@@ -362,3 +362,63 @@ steps:
                 )
         out:
             [annotated_vcfs]
+
+    # Now run the QA check.
+    qa_check:
+        in:
+            tumourMinibams: run_variant_bam/minibam
+            tumour_record:
+                source: tumours
+            normal_bam: normalBam
+            vcfs: flatten_oxog_output/oxogVCFs
+            normalMinibam: run_variant_bam_normal/minibam
+            inputFileDirectory: inputFileDirectory
+        scatter: [tumour_record]
+        run:
+            class: Workflow
+            inputs:
+                inputFileDirectory:
+                    type: Directory
+                tumour_record:
+                    type: "TumourType.yaml#TumourType"
+                vcfs:
+                    type: File[]
+                normal_bam:
+                    type: File
+                    secondaryFiles: .bai
+                tumourMinibams:
+                    type: File[]
+                normalMinibam:
+                    type: File
+            steps:
+                run_qa_check:
+                    in:
+                        tumour_record: tumour_record
+                        vcfs: vcfs
+                        normal_bam: normal_bam
+                        normal_minibam: normalMinibam
+                        tumour_minibam:
+                            source: [tumour_record, tumourMinibams]
+                            valueFrom: |
+                                ${
+                                    for (i in self[1])
+                                    {
+                                        if (self[1].basename.indexOf( self[0].bamFileName ) !== -1)
+                                        {
+                                            return self[1]
+                                        }
+                                    }
+                                }
+                        tumour_bam:
+                            source: [inputFileDirectory, tumour_record]
+                            valueFrom: |
+                                ${
+                                    return { "class":"File", "location": self[0].location + "/" + self[1].bamFileName }
+                                }
+                    out: [qa_result]
+                    run: qa_check_subwf.cwl
+            outputs:
+                qa_result:
+                    type: File
+        out:
+            [qa_result]

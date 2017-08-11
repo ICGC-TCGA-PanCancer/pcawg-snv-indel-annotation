@@ -21,7 +21,7 @@ requirements:
     - class: SubworkflowFeatureRequirement
 
 outputs:
-    qa_check:
+    qa_result:
         File
 
 inputs:
