@@ -401,11 +401,12 @@ steps:
                             source: [tumour_record, tumourMinibams]
                             valueFrom: |
                                 ${
-                                    for (i in self[1])
+                                    for (var i in self[1])
                                     {
-                                        if (self[1].basename.indexOf( self[0].bamFileName ) !== -1)
+                                        var tumourMinibam = self[1][i]
+                                        if (tumourMinibam.basename.indexOf( self[0].bamFileName ) !== -1)
                                         {
-                                            return self[1]
+                                            return tumourMinibam
                                         }
                                     }
                                 }
