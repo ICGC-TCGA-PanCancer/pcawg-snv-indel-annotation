@@ -16,3 +16,9 @@ To get the submodules, use a command like this:
 ```bash
 $ git submodule update --init --recursive
 ```
+
+## Reference Files.
+You will need the reference files located at https://personal.broadinstitute.org/gsaksena/public_full8.tar.gz
+
+## Running the workflow
+You will need to run the workflow with the cwltool flags `--relax-path-checks` and `--non-strict`.
