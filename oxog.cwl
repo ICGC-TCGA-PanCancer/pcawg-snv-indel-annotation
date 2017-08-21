@@ -36,7 +36,7 @@ dct:creator:
 
 requirements:
   - class: DockerRequirement
-    dockerPull:  pcawg/oxog_tool
+    dockerPull: quay.io/pancancer/pcawg-oxog-filter
   - class: InlineJavascriptRequirement
 
 inputs:
