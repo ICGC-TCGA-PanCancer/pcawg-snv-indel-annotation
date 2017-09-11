@@ -19,6 +19,10 @@ requirements:
 inputs:
     - id: "#vcfdir"
       type: Directory
+      doc: "The directory containing the files"
+    - id: "#filesToFilter"
+      type: string[]
+      doc: "The names of the files that will actually be filtered"
 
 outputs:
     output:
