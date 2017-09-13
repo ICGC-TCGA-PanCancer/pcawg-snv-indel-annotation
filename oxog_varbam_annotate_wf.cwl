@@ -87,13 +87,16 @@ steps:
             valueFrom: |
                 ${
                     // Put all VCFs into an array.
-                    // var VCFs = []
-                    // for (var i in self)
-                    // {
-                    //     VCFs.concat(self[i].associatedVcfs)
-                    // }
-                    // return VCFs;
-                    return self[0].associatedVcfs
+                    var VCFs = []
+                    for (var i in self)
+                    {
+                        for (var j in self[i].associatedVcfs)
+                        {
+                            VCFs.push(self[i].associatedVcfs[j])
+                        }
+                    }
+                    return VCFs;
+                    //return self[0].associatedVcfs
                 }
       run: preprocess_vcf.cwl
       out: [preprocessedFiles]

@@ -75,32 +75,41 @@ steps:
     clean:
       doc: "Clean the VCFs."
       run: clean_vcf.cwl
-      scatter: clean/vcf
+      scatter: [vcf]
       in:
         vcf: pass_filter/output
       out: [clean_vcf]
 
+    gather_muse_snvs_for_cleaning:
+      in:
+        vcfdir:
+            source: vcfdir
+        vcfs:
+            source: filesToPreprocess
+      out: [snvs_for_cleaning]
+      run:
+        class: ExpressionTool
+        inputs:
+          vcfs: string[]
+          vcfdir: Directory
+        outputs:
+          snvs_for_cleaning: File[]
+        expression: |
+            $({
+                snvs_for_cleaning: (  filterFor("MUSE","snv_mnv", inputs.vcfs ).map(function(e) {
+                    e = { "class":"File", "location":inputs.vcfdir.location+"/"+e }
+                    return e;
+                } )  )
+            })
+
     clean_muse:
       doc: "Clean the MUSE VCFs."
       run: clean_vcf.cwl
-      scatter: clean_muse/vcf
+      scatter: [vcf]
       in:
-        vcf:
-            source: [ filesToPreprocess, vcfdir ]
-            valueFrom: |
-                ${
-                    var VCFs = []
-                    var files = self[0]
-                    for (var i in files)
-                    {
-                        //if (files[i].toLowerCase().indexOf("muse") !== -1)
-                        {
-                            VCFs.push({ "class":"File","location":self[1].basedir + "/" + files[0] });
-                        }
-                    }
-                    return VCFs;
-                }
+        vcf: gather_muse_snvs_for_cleaning/snvs_for_cleaning
       out: [clean_vcf]
+
 
     filter_for_indel:
       doc: "Filters the input list and selects the INDEL VCFs."
