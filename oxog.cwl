@@ -9,7 +9,7 @@ doc: |
 
 # Input file should look like this:
 # {
-#     "oxoQScore":"10.5",
+#     "oxoQScore":10.5,
 #     "tumourID":"123456789",
 #     "inputFileDirectory" : {
 #         "class":"Directory",
@@ -57,7 +57,7 @@ inputs:
           prefix: --bamName
       secondaryFiles: ".bai"
     - id: oxoQScore
-      type: string
+      type: float
       inputBinding:
           position: 4
           prefix: --oxoqScore

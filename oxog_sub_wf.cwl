@@ -32,8 +32,6 @@ inputs:
         type: "TumourType.yaml#TumourType"
     refDataDir:
         type: Directory
-    oxoQScore:
-        type: string
 
 steps:
     sub_run_oxog:
@@ -53,7 +51,12 @@ steps:
                         return { "class":"File", "location": self[0].location + "/" + self[1].bamFileName }
                     }
             refDataDir: refDataDir
-            oxoQScore: oxoQScore
+            oxoQScore:
+                source: [in_data]
+                valueFrom: |
+                    ${
+                        return self.oxoQScore
+                    }
             vcfNames:
                 source: [in_data, vcfsForOxoG]
                 valueFrom: |
