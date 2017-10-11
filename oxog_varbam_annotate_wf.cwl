@@ -285,7 +285,6 @@ steps:
                 source: tumours
             inputFileDirectory: inputFileDirectory
             refDataDir: refDataDir
-            oxoQScore: oxoQScore
             vcfsForOxoG: gather_vcfs_for_oxog/vcfs
         out: [oxogVCF]
         scatter: [in_data]

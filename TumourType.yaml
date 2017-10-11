@@ -13,3 +13,7 @@ fields:
     type: string[]
     inputBinding:
         position: 2
+  - name: oxoQScore
+    type: float
+    inputBinding:
+        position: 3
