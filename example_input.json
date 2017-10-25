@@ -1,0 +1,70 @@
+{
+    "vcfdir": {
+        "path": "/path/to/inputfiles/",
+        "class": "Directory"
+    },
+    "refFile": {
+        "path": "/path/to/referencedata/full_refdata/public/Homo_sapiens_assembly19.fasta",
+        "class": "File"
+    },
+    "normalBam": {
+        "path": "/path/to/inputfiles/MyNormal.bam",
+        "class": "File"
+    },
+    "tumours":
+    [
+        {
+            "tumourId": "123456789",
+            "bamFileName": "123456789.bam",
+            "associatedVcfs":
+            [
+                "123-456-789.broad-mutect-v3.20160222.somatic.snv_mnv.vcf.gz",
+                "123-456-789.broad-dRanger_snowman-10.20160101.somatic.sv.vcf.gz",
+                "123-456-789.broad-snowman-10.20160101.somatic.indel.vcf.gz",
+                "123-456-789.dkfz-snvCalling_1-0-132-1-hpc.1602051320.somatic.snv_mnv.vcf.gz",
+                "123-456-789.dkfz-indelCalling_1-0-132-1-hpc.1602051320.somatic.indel.vcf.gz",
+                "123-456-789.embl-delly_1-0-0-preFilter-hpc.150901.somatic.sv.vcf.gz",
+                "123-456-789.MUSE_1-0rc-b391201-vcf.20160101.somatic.snv_mnv.vcf.gz",
+                "123-456-789.svcp_1-0-5.20150306.somatic.snv_mnv.vcf.gz",
+                "123-456-789.svcp_1-0-5.20150306.somatic.indel.vcf.gz",
+                "123-456-789.svfix2_4-0-12.20160213.somatic.sv.vcf.gz"
+            ],
+            "oxoQScore":51.79
+        }
+        ,
+        {
+            "tumourId": "987654321",
+            "bamFileName": "987654321.bam",
+            "associatedVcfs":
+            [
+                "987-654-321.broad-mutect-v3.20160222.somatic.snv_mnv.vcf.gz",
+                "987-654-321.broad-dRanger_snowman-10.20160101.somatic.sv.vcf.gz",
+                "987-654-321.broad-snowman-10.20160101.somatic.indel.vcf.gz",
+                "987-654-321.dkfz-snvCalling_1-0-132-1-hpc.1602051320.somatic.snv_mnv.vcf.gz",
+                "987-654-321.dkfz-indelCalling_1-0-132-1-hpc.1602051320.somatic.indel.vcf.gz",
+                "987-654-321.embl-delly_1-0-0-preFilter-hpc.150901.somatic.sv.vcf.gz",
+                "987-654-321.MUSE_1-0rc-b391201-vcf.20160101.somatic.snv_mnv.vcf.gz",
+                "987-654-321.svcp_1-0-5.20150306.somatic.indel.vcf.gz",
+                "987-654-321.svcp_1-0-5.20150306.somatic.snv_mnv.vcf.gz",
+                "987-654-321.svfix2_4-0-12.20160213.somatic.sv.vcf.gz"
+            ],
+            "oxoQScore":95.65
+        }
+    ],
+    "oxoQScore": "10.3",
+    "out_dir": "/var/spool/cwl/",
+    "snv-padding": "200",
+    "sv-padding": "10",
+    "indel-padding": "205",
+    "minibamName": "minibam.bam",
+    "inputFileDirectory": {
+        "class":"Directory",
+        "path":"/path/to/inputfiles/",
+        "location":"/path/to/inputfiles/"
+    },
+    "refDataDir": {
+        "class":"Directory",
+        "path":"/path/to/referencedata/",
+        "location":"/path/to/referencedata/"
+    }
+}
