@@ -51,7 +51,6 @@
             "oxoQScore":95.65
         }
     ],
-    "oxoQScore": "10.3",
     "out_dir": "/var/spool/cwl/",
     "snv-padding": "200",
     "sv-padding": "10",
