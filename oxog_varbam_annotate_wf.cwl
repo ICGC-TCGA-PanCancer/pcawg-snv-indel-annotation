@@ -43,8 +43,6 @@ inputs:
       type: string
     indel-padding:
       type: string
-    oxoQScore:
-      type: string
     refDataDir:
       type: Directory
     minibamName:
