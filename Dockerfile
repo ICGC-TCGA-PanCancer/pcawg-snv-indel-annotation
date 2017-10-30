@@ -2,18 +2,9 @@ FROM ubuntu:16.04
 LABEL MAINTAINER solomon.shorser@oicr.on.ca
 RUN mkdir -p /opt/gitroot
 
-RUN apt-get update
-RUN apt-get install -y apt-utils
-RUN apt-get install -y pkg-config
-RUN apt-get install -y git
-RUN apt-get install -y tabix
-RUN apt-get install -y bash
-RUN apt-get install -y gcc
-RUN apt-get install -y make
-RUN apt-get install -y zlib1g-dev
-RUN apt-get install -y libstring-random-perl
-RUN apt-get install -y dh-autoreconf
-RUN apt-get install -y samtools
+RUN apt-get update && apt-get -y install apt-utils \
+	pkg-config git tabix bash gcc make zlib1g-dev \
+	libstring-random-perl dh-autoreconf samtools
 RUN apt-get autoremove
 
 # Install bcftools - this is used for normalizing VCFs
