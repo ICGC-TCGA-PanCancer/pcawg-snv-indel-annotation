@@ -1,4 +1,9 @@
 
+/**
+ * Filters an array of files. Returns an array that only contains files that contain "indel" in their name.
+ * @param inArr - the array.
+ * @return a filtered array - it will only contain files whose names contain the string "indel".
+ */
 function filterForIndels(inArr)
 {
 	var arr = [];
@@ -13,9 +18,12 @@ function filterForIndels(inArr)
 }
 
 /**
- * workflowName - the name of the workflow to filter for.
- * vcfType - the type of VCF (snv, indel, etc...)
- * inArr - an array of files (File[]) to search through.
+ * This function will filter an array of files and select only files that match
+ * workflowName and vcfType.
+ * @param workflowName - the name of the workflow to filter for.
+ * @param vcfType - the type of VCF (snv, indel, etc...)
+ * @param inArr - an array of files (File[]) to search through.
+ * @return an array that has been filtered.
  */
 function filterFor(workflowName, vcfType, inArr)
 {

@@ -2,10 +2,10 @@ name: PreprocessedFileset
 type: record
 fields:
     - name: mergedVcfs
-      type: File[]
+      type: File[]?
     - name: normalizedVcfs
-      type: File[]
+      type: File[]?
     - name: extractedSnvs
-      type: File[]
+      type: File[]?
     - name: cleanedVcfs
-      type: File[]
+      type: File[]?

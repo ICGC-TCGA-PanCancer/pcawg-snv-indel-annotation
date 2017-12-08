@@ -1,7 +1,6 @@
 #!/usr/bin/env cwl-runner
 
 cwlVersion: v1.0
-class: Workflow
 
 doc: |
     This subworkflow will perform a QA check on the OxoG outputs. It will perform the QA check on a single tumour and it associated VCFs

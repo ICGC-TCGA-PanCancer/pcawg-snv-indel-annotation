@@ -15,7 +15,7 @@ requirements:
     - class: MultipleInputFeatureRequirement
     - class: InlineJavascriptRequirement
       expressionLib:
-        - { $include: oxog_varbam_annotate_util.js }
+        - { $include: annotate_util.js }
     - class: SubworkflowFeatureRequirement
 
 inputs:
