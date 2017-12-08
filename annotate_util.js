@@ -1,21 +1,3 @@
-function filterFileArray(str, inArr) {
-	var arr = [];
-	for (var i = 0; i < inArr.length; i++) {
-		if (inArr[i].basename.indexOf(str) >= 0) {
-			// Return the first match.
-			return inArr[i]
-		}
-	}
-	return arr;
-}
-
-function appendBam(str) {
-	return str.concat(".bam")
-}
-
-function appendBai(str) {
-	return str.concat(".bai")
-}
 
 function flatten_nested_arrays(array_of_arrays)
 {
@@ -40,71 +22,13 @@ function flatten_nested_arrays(array_of_arrays)
 	}
 	return flattened_array
 }
-function createArrayOfFilesForOxoG(in_data, vcfsForOxoG) {
-	//TODO: Move this function to separate JS file.
-	var vcfsToUse = []
-	// Need to search through vcfsForOxoG (cleaned VCFs that have been zipped and index) and preprocess_vcfs/extractedSNVs to find VCFs
-	// that match the names of those in in_data.inputs.associatedVCFs
-	//
-	var associatedVcfs = in_data.associatedVcfs
-	for ( var i in associatedVcfs )
-	{
-		if ( associatedVcfs[i].indexOf(".snv") !== -1 )
-		{
-			for ( var j in vcfsForOxoG )
-			{
-				if ( vcfsForOxoG[j].basename.indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 && /.*\.gz$/.test(vcfsForOxoG[j].basename))
-				{
-					vcfsToUse.push (  vcfsForOxoG[j]    )
-				}
-			}
-		}
-		if ( associatedVcfs[i].indexOf(".indel") !== -1 )
-		{
-			for ( var j in vcfsForOxoG )
-			{
-			    if ( vcfsForOxoG[j].basename.replace(".pass-filtered.cleaned.vcf.normalized.extracted-SNVs.vcf.gz","").indexOf( associatedVcfs[i].replace(".vcf.gz","") ) !== -1 && /.*\.gz$/.test(vcfsForOxoG[j].basename))
-			    {
-			        vcfsToUse.push (  vcfsForOxoG[j]    )
-			    }
-			}
-		}
-		//vcfsToUse.concat(extractedSnvs)
-	}
-	return vcfsToUse
-}
-
-
-function chooseINDELsForAnnotator(oxogVCFs, tumours_list)
-{
-	var vcfsToUse = [];
-	var flattened_oxogs = flatten_nested_arrays(oxogVCFs);
-	var associated_indels = tumours_list.associatedVcfs.filter( function(item)
-		{
-			return item.indexOf("indel") !== -1;
-		});
-	for (var i in associated_indels)
-	{
-		for (var j in flattened_oxogs)
-		{
-			//if ( flattened_oxogs[j].basename.indexOf(associated_indels[i].replace(".vcf.gz","")) !== -1 )
-			{
-				vcfsToUse.push(flattened_oxogs[j]);
-			}
-		}
-	}
-	return vcfsToUse;
-}
 
 function chooseVCFsForAnnotator(VCFs, associatedVcfs)
 {
 	var vcfsToUse = [];
 	//this might be a nested array if it came from the OxoG output.
 	var flattened_array = flatten_nested_arrays(VCFs);
-	// var associated_vcfs = tumours_list.associatedVcfs.filter( function(item)
-	// 	{
-	// 		return item.indexOf("indel") !== -1;
-	// 	});
+
 	var associated_vcfs = associatedVcfs
 	for (var i in associated_vcfs)
 	{
@@ -124,40 +48,18 @@ function chooseVCFsForAnnotator(VCFs, associatedVcfs)
 	return vcfsToUse;
 }
 
-function chooseMiniBamForAnnotator(tumourMinibams, tumours_record)
+function chooseBamForAnnotator(tumourBams, tumours_record)
 {
-	// var minibamToUse
-	for (var j in tumourMinibams )
+	// var BamToUse
+	for (var j in tumourBams )
 	{
-		// The minibam should be named the same as the regular bam, except for the "mini-" prefix.
+		// The Bam should be named the same as the regular bam, except for the "mini-" prefix.
 		// This condition should only ever be satisfied once.
-		if (tumourMinibams[j].basename.indexOf( tumours_record.bamFileName ) !== -1 )
+		if (tumourBams[j].basename.indexOf( tumours_record.bamFileName ) !== -1 )
 		{
-			return tumourMinibams[j]
+			return tumourBams[j]
 		}
 	}
-	//return minibamToUse
+	//return BamToUse
 	return undefined
-}
-
-function chooseSNVsForAnnotator(oxogVCFs, tumours_list)
-{
-	var vcfsToUse = []
-	var flattened_oxogs = flatten_nested_arrays(oxogVCFs)
-	var associated_snvs = tumours_list.associatedVcfs.filter( function(item)
-		{
-			return item.indexOf("snv") !== -1
-		}
-	)
-	for (var i in associated_snvs)
-	{
-		for (var j in flattened_oxogs)
-		{
-			//if ( flattened_oxogs[j].basename.indexOf(associated_snvs[i].replace(".vcf.gz","")) !== -1 )
-			{
-				vcfsToUse.push(flattened_oxogs[j])
-			}
-		}
-	}
-	return vcfsToUse
 }

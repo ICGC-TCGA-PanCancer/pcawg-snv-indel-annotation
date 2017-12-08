@@ -25,6 +25,10 @@ requirements:
     - class: SubworkflowFeatureRequirement
 
 inputs:
+    refFile:
+      type: File
+    out_dir:
+      type: string
     tumourBams:
       type: File[]
     normalBam:
@@ -92,6 +96,7 @@ steps:
     # we need OxoG filtered files, and minibams (tumour and normal).
     # Then we need to scatter. We can scatter on minibams, and perform all annotations
     # for each minibam at a time.
+    # Of course, this shoudl work with regular (non-mini) bams, but will probably run slower.
     run_annotator_snvs:
         in:
             tumourBams: tumourBams
@@ -110,7 +115,7 @@ steps:
     run_annotator_indels:
         in:
             tumourBams: tumourBams
-            VCFs: oxogVCFs
+            VCFs: get_normalized_vcfs/normalized_vcfs
             tumour_record:
                 source: tumours
             normalBam: normalBam

@@ -21,22 +21,22 @@ requirements:
 inputs:
     tumour_record:
         type: "TumourType.yaml#TumourType"
-    tumourMinibams:
+    tumourBams:
         type: File[]
     VCFs:
         type: File[]
-    normalMinibam:
+    normalBam:
         type: File
     variantType:
         type: string
 outputs:
     annotated_vcfs:
         type: File[]
-        outputSource: level_0/annotated_vcf
+        outputSource: chooseVCFsToAnnotate/annotated_vcf
 steps:
     # This step will prepare the next level by creating vcfsToAnnotate as an array of
     # vcfs that need to be annotated
-    level_0:
+    chooseVCFsToAnnotate:
         in:
             vcfsToAnnotate:
                 source: [tumour_record, VCFs]
@@ -45,13 +45,13 @@ steps:
                         return chooseVCFsForAnnotator(self[1], self[0].associatedVcfs)
                     }
             tumour_bam:
-                source: [tumour_record, tumourMinibams]
+                source: [tumour_record, tumourBams]
                 valueFrom: |
                     ${
-                        return chooseMiniBamForAnnotator(self[1], self[0])
+                        return chooseBamForAnnotator(self[1], self[0])
                     }
             variantType: variantType
-            normalMinibam: normalMinibam
+            normalBam: normalBam
         out: [annotated_vcf]
         run:
             class: Workflow
@@ -62,20 +62,20 @@ steps:
                     type: File[]
                 variantType:
                     type: string
-                normalMinibam:
+                normalBam:
                     type: File
             outputs:
                 annotated_vcf:
                     type: File[]
-                    outputSource: level_1/annotated_vcf
+                    outputSource: processVCFs/annotated_vcf
             steps:
-                # This step scatters across the array of VCFs created by level_0
-                level_1:
+                # This step scatters across the array of VCFs created by chooseVCFsToAnnotate
+                processVCFs:
                     in:
                         tumour_bam: tumour_bam
                         input_vcf: vcfsToAnnotate
                         variant_type: variantType
-                        normal_bam: normalMinibam
+                        normal_bam: normalBam
                     scatter: [input_vcf]
                     out:
                         [annotated_vcf]
@@ -91,8 +91,8 @@ steps:
                             normal_bam:
                                 type: File
                         steps:
-                            # This step takes the scatter of level_1 and executes the annotator on each VCF.
-                            level_2:
+                            # This step takes the scatter of processVCFs and executes the annotator on each VCF.
+                            annotate:
                                 in:
                                     tumour_bam: tumour_bam
                                     input_vcf: input_vcf
@@ -111,4 +111,4 @@ steps:
                         outputs:
                             annotated_vcf:
                                 type: File
-                                outputSource: level_2/annotated_vcf
+                                outputSource: annotate/annotated_vcf

@@ -1,87 +1,102 @@
 {
+    "refFile": {
+        "path": "/media/sshorser/data/oxog_ref_data/full_refdata/public/Homo_sapiens_assembly19.fasta",
+        "class": "File"
+    },
     "tumourBams": [
         {
-            "path": "/path/to/inputfiles/123456789.bam",
+            "path": "/media/sshorser/Data/oxog_test_data_2/DO52739/files_for_workflow/7676725d9976424c98f7a92075e65554.bam",
             "class": "File"
         },
         {
-            "path": "/path/to/inputfiles/987654321.bam",
+            "path": "/media/sshorser/Data/oxog_test_data_2/DO52739/files_for_workflow/dd8bd66c1eb529745a55ae9fea2ddd4b.bam",
             "class": "File"
         }
     ],
     "normalBam": {
-        "path": "/path/to/inputfiles/MyNormal.bam",
+        "path": "/media/sshorser/Data/oxog_test_data_2/DO52739/files_for_workflow/6a40a6df68474d9357bacc988ea3e30e.bam",
         "class": "File"
     },
     "tumours":
     [
         {
-            "tumourId": "123456789",
-            "bamFileName": "123456789.bam",
+            "tumourId": "7676725d9976424c98f7a92075e65554",
+            "bamFileName": "7676725d9976424c98f7a92075e65554.bam",
             "associatedVcfs":
             [
-                "123-456-789.broad-mutect-v3.20160222.somatic.snv_mnv.vcf.gz",
-                "123-456-789.broad-dRanger_snowman-10.20160101.somatic.sv.vcf.gz",
-                "123-456-789.broad-snowman-10.20160101.somatic.indel.vcf.gz",
-                "123-456-789.dkfz-snvCalling_1-0-132-1-hpc.1602051320.somatic.snv_mnv.vcf.gz",
-                "123-456-789.dkfz-indelCalling_1-0-132-1-hpc.1602051320.somatic.indel.vcf.gz",
-                "123-456-789.embl-delly_1-0-0-preFilter-hpc.150901.somatic.sv.vcf.gz",
-                "123-456-789.MUSE_1-0rc-b391201-vcf.20160101.somatic.snv_mnv.vcf.gz",
-                "123-456-789.svcp_1-0-5.20150306.somatic.snv_mnv.vcf.gz",
-                "123-456-789.svcp_1-0-5.20150306.somatic.indel.vcf.gz",
-                "123-456-789.svfix2_4-0-12.20160213.somatic.sv.vcf.gz"
+                "f8f0136b-09ec-d079-e040-11ac0c4842e7.broad-mutect-v3.20160222.somatic.snv_mnv.vcf.gz",
+                "f8f0136b-09ec-d079-e040-11ac0c4842e7.broad-dRanger_snowman-10.20160101.somatic.sv.vcf.gz",
+                "f8f0136b-09ec-d079-e040-11ac0c4842e7.broad-snowman-10.20160101.somatic.indel.vcf.gz",
+                "f8f0136b-09ec-d079-e040-11ac0c4842e7.dkfz-snvCalling_1-0-132-1-hpc.1602051320.somatic.snv_mnv.vcf.gz",
+                "f8f0136b-09ec-d079-e040-11ac0c4842e7.dkfz-indelCalling_1-0-132-1-hpc.1602051320.somatic.indel.vcf.gz",
+                "f8f0136b-09ec-d079-e040-11ac0c4842e7.embl-delly_1-0-0-preFilter-hpc.150901.somatic.sv.vcf.gz",
+                "f8f0136b-09ec-d079-e040-11ac0c4842e7.MUSE_1-0rc-b391201-vcf.20160101.somatic.snv_mnv.vcf.gz",
+                "f8f0136b-09ec-d079-e040-11ac0c4842e7.svcp_1-0-5.20150306.somatic.snv_mnv.vcf.gz",
+                "f8f0136b-09ec-d079-e040-11ac0c4842e7.svcp_1-0-5.20150306.somatic.indel.vcf.gz",
+                "f8f0136b-09ec-d079-e040-11ac0c4842e7.svfix2_4-0-12.20160213.somatic.sv.vcf.gz"
             ],
-            "oxoQScore":51.79
+            "oxoQScore":51.89
         }
         ,
         {
-            "tumourId": "987654321",
-            "bamFileName": "987654321.bam",
+            "tumourId": "dd8bd66c1eb529745a55ae9fea2ddd4b",
+            "bamFileName": "dd8bd66c1eb529745a55ae9fea2ddd4b.bam",
             "associatedVcfs":
             [
-                "987-654-321.broad-mutect-v3.20160222.somatic.snv_mnv.vcf.gz",
-                "987-654-321.broad-dRanger_snowman-10.20160101.somatic.sv.vcf.gz",
-                "987-654-321.broad-snowman-10.20160101.somatic.indel.vcf.gz",
-                "987-654-321.dkfz-snvCalling_1-0-132-1-hpc.1602051320.somatic.snv_mnv.vcf.gz",
-                "987-654-321.dkfz-indelCalling_1-0-132-1-hpc.1602051320.somatic.indel.vcf.gz",
-                "987-654-321.embl-delly_1-0-0-preFilter-hpc.150901.somatic.sv.vcf.gz",
-                "987-654-321.MUSE_1-0rc-b391201-vcf.20160101.somatic.snv_mnv.vcf.gz",
-                "987-654-321.svcp_1-0-5.20150306.somatic.indel.vcf.gz",
-                "987-654-321.svcp_1-0-5.20150306.somatic.snv_mnv.vcf.gz",
-                "987-654-321.svfix2_4-0-12.20160213.somatic.sv.vcf.gz"
+                "f8e61a02-938b-9428-e040-11ac0d481b6c.broad-mutect-v3.20160222.somatic.snv_mnv.vcf.gz",
+                "f8e61a02-938b-9428-e040-11ac0d481b6c.broad-dRanger_snowman-10.20160101.somatic.sv.vcf.gz",
+                "f8e61a02-938b-9428-e040-11ac0d481b6c.broad-snowman-10.20160101.somatic.indel.vcf.gz",
+                "f8e61a02-938b-9428-e040-11ac0d481b6c.dkfz-snvCalling_1-0-132-1-hpc.1602051320.somatic.snv_mnv.vcf.gz",
+                "f8e61a02-938b-9428-e040-11ac0d481b6c.dkfz-indelCalling_1-0-132-1-hpc.1602051320.somatic.indel.vcf.gz",
+                "f8e61a02-938b-9428-e040-11ac0d481b6c.embl-delly_1-0-0-preFilter-hpc.150901.somatic.sv.vcf.gz",
+                "f8e61a02-938b-9428-e040-11ac0d481b6c.MUSE_1-0rc-b391201-vcf.20160101.somatic.snv_mnv.vcf.gz",
+                "f8e61a02-938b-9428-e040-11ac0d481b6c.svcp_1-0-5.20150306.somatic.indel.vcf.gz",
+                "f8e61a02-938b-9428-e040-11ac0d481b6c.svcp_1-0-5.20150306.somatic.snv_mnv.vcf.gz",
+                "f8e61a02-938b-9428-e040-11ac0d481b6c.svfix2_4-0-12.20160213.somatic.sv.vcf.gz"
             ],
-            "oxoQScore":95.65
+            "oxoQScore":45.65
         }
     ],
+    "out_dir": "/var/spool/cwl/",
     "inputFileDirectory": {
         "class":"Directory",
-        "path":"/path/to/inputfiles/",
-        "location":"/path/to/inputfiles/"
+        "path":"/media/sshorser/Data/oxog_test_data_2/DO52739/files_for_workflow",
+        "location":"/media/sshorser/Data/oxog_test_data_2/DO52739/files_for_workflow"
     },
     "oxogVCFs":
     [
         {
-            "path": "/path/to/inputfiles/123-456-789.broad-oxog-snv.vcf.gz",
+            "path": "/media/sshorser/Data/oxog_only_wf/f8e61a02-938b-9428-e040-11ac0d481b6c.svcp_1-0-5.20150306.somatic.snv_mnv.pass-filtered.cleaned.oxoG.vcf.gz",
             "class": "File"
         },
         {
-            "path": "/path/to/inputfiles/123-456-789.sanger-oxog-snv.vcf.gz",
+            "path": "/media/sshorser/Data/oxog_only_wf/f8e61a02-938b-9428-e040-11ac0d481b6c.MUSE_1-0rc-b391201-vcf.20160101.somatic.snv_mnv.cleaned.oxoG.vcf.gz",
             "class": "File"
         },
         {
-            "path": "/path/to/inputfiles/123-456-789.dkfz-embl-oxog-snv.vcf.gz",
+            "path": "/media/sshorser/Data/oxog_only_wf/f8e61a02-938b-9428-e040-11ac0d481b6c.dkfz-snvCalling_1-0-132-1-hpc.1602051320.somatic.snv_mnv.pass-filtered.cleaned.oxoG.vcf.gz",
             "class": "File"
         },
         {
-            "path": "/path/to/inputfiles/987-654-321.broad-oxog-snv.vcf.gz",
+            "path": "/media/sshorser/Data/oxog_only_wf/f8e61a02-938b-9428-e040-11ac0d481b6c.broad-mutect-v3.20160222.somatic.snv_mnv.pass-filtered.cleaned.oxoG.vcf.gz",
+            "class": "File"
+        },
+
+
+        {
+            "path": "/media/sshorser/Data/oxog_only_wf/f8f0136b-09ec-d079-e040-11ac0c4842e7.svcp_1-0-5.20150306.somatic.snv_mnv.pass-filtered.cleaned.oxoG.vcf.gz",
             "class": "File"
         },
         {
-            "path": "/path/to/inputfiles/987-654-321.sanger-oxog-snv.vcf.gz",
+            "path": "/media/sshorser/Data/oxog_only_wf/f8f0136b-09ec-d079-e040-11ac0c4842e7.MUSE_1-0rc-b391201-vcf.20160101.somatic.snv_mnv.cleaned.oxoG.vcf.gz",
             "class": "File"
         },
         {
-            "path": "/path/to/inputfiles/987-654-321.dkfz-embl-oxog-snv.vcf.gz",
+            "path": "/media/sshorser/Data/oxog_only_wf/f8f0136b-09ec-d079-e040-11ac0c4842e7.dkfz-snvCalling_1-0-132-1-hpc.1602051320.somatic.snv_mnv.pass-filtered.cleaned.oxoG.vcf.gz",
+            "class": "File"
+        },
+        {
+            "path": "/media/sshorser/Data/oxog_only_wf/f8f0136b-09ec-d079-e040-11ac0c4842e7.broad-mutect-v3.20160222.somatic.snv_mnv.pass-filtered.cleaned.oxoG.vcf.gz",
             "class": "File"
         }
     ]
