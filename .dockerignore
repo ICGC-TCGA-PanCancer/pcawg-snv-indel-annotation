@@ -1,8 +1,0 @@
-consensus-calling-for-dockstore
-old_vcfs
-merge_test
-*.vcf
-*.vcf.gz
-*.tbi
-*.bam
-*.bai
