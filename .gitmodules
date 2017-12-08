@@ -1,6 +1,3 @@
-[submodule "Variantbam-for-dockstore"]
-	path = Variantbam-for-dockstore
-	url = https://github.com/ICGC-TCGA-PanCancer/Variantbam-for-dockstore
 [submodule "sga-annotate-docker"]
 	path = sga-annotate-docker
 	url = https://github.com/ljdursi/sga-annotate-docker
