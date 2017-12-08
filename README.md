@@ -1,24 +1,3 @@
-# OxoG-Dockstore-Tools
+# pcawg-snv-indel-annotation
 
-[![Docker Repository on Quay](https://quay.io/repository/pancancer/pcawg-oxog-tools/status "Docker Repository on Quay")](https://quay.io/repository/pancancer/pcawg-oxog-tools)
-
-A set of CWL tools that are based on scripts used in the OxoGWrapperWorkflow.
-
-Tools contained within:
- - check_minibams.sh - Checks that minibams are OK
- - clean_vcf.sh - Cleans VCFS so that they are ready to be processed by the OxoGWrapperWorkflow
- - normalize.sh - Normalizes INDEL files by calling bcf-tools norm.
- - pass_filter.sh - Performs pass-filtering on VCFs.
- - vcf_merge_by_type.pl - Merges VCFs.
-
-To get the submodules, use a command like this:
-
-```bash
-$ git submodule update --init --recursive
-```
-
-## Reference Files.
-You will need the reference files located at https://personal.broadinstitute.org/gsaksena/public_full8.tar.gz
-
-## Running the workflow
-You will need to run the workflow with the cwltool flags `--relax-path-checks` and `--non-strict`.
+This repository hosts the PCAWG Annotator as a CWL workflow.
