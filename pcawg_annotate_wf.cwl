@@ -45,7 +45,11 @@ inputs:
 outputs:
     annotated_files:
         type: File[]
-        outputSource: gather_annotated_vcfs/annotated_vcfs
+        outputSource: zip_annotated_vcfs/zipped_file
+
+    annotated_files_indicies:
+        type: File[]
+        outputSource: zip_annotated_vcfs/indexed_file
 
 steps:
     ########################################
@@ -144,3 +148,11 @@ steps:
                 )
         out:
             [annotated_vcfs]
+
+
+    zip_annotated_vcfs:
+        in:
+            vcf: gather_annotated_vcfs/annotated_vcfs
+        scatter: [vcf]
+        run: zip_and_index_vcf.cwl
+        out: [ zipped_file, indexed_file ]
