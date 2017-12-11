@@ -1,6 +1,6 @@
 # pcawg-snv-indel-annotation
 
-This repository hosts the PCAWG Annotator as a CWL workflow.
+This repository hosts the PCAWG Annotator as a CWL workflow. This workflow will _only_ run the annotator. For a workflow that runs PCAWG OxoG Filter, PCAWG Annotation, and generates Minibams, see this repository:  https://github.com/ICGC-TCGA-PanCancer/OxoG-Dockstore-Tools
 
 The Anntoator was created by Jonathan Dursi. For more information, see this repo: https://github.com/ljdursi/sga-annotate-docker
 
