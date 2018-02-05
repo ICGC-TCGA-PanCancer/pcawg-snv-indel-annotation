@@ -132,7 +132,7 @@ doc: |
     #### Option 1: Run with CWL tool
     - Download CWL workflow definition file
     ```
-    #wget -O pcawg-bwa-mem-aligner.cwl "https://raw.githubusercontent.com/ICGC-TCGA-PanCancer/Seqware-BWA-Workflow/2.6.8_1.3/Dockstore.cwl"
+    wget -O pcawg_annotate_wf.cwl "https://raw.githubusercontent.com/baminou/pcawg-snv-indel-annotation/patch-1/pcawg_annotate_wf.cwl"
     ```
 
     - Run *cwltool* to execute the workflow
